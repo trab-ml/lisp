@@ -22,7 +22,7 @@ On pourrait imaginer, dans un futur proche, passer de la réalisation d'un simpl
 Il suffit de déclarer une fois ce projet comme dépôt distant de votre divergence :
 
 ```
-$ git remote add upstream https://gitlab.univ-artois.fr/m1-2022-2023/TDD2023CODE.git
+$ git remote add upstream https://gitlab.univ-artois.fr/dlbenseignement/m1-2022-2023/TDD2023CODE.git
 ```
 
 Ensuite, à chaque mise à jour de ce projet, vous pourrez mettre à jour votre divergence
