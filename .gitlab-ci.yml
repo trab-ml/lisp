@@ -1,0 +1,25 @@
+variables:
+  GIT_STRATEGY: clone
+  GIT_CHECKOUT: "true"
+  GIT_SUBMODULE_STRATEGY: recursive
+  PROXY: "-Dhttp.proxyHost=cache-etu.univ-artois.fr -Dhttp.proxyPort=3128 -Dhttps.proxyHost=cache-etu.univ-artois.fr -Dhttps.proxyPort=3128 -Dhttp.nonProxyHosts=localhost"
+  SONARINFO: "-Dsonar.host.url=http://sonarqube.univ-artois.fr/ -Dsonar.login=$SONARTOKEN -Dsonar.projectName=TDD2021_$CI_PROJECT_NAMESPACE  -Dsonar.projectKey=tdd2021_$CI_PROJECT_NAMESPACE"
+
+before_script: 
+   - "./checklinks.sh $CI_PROJECT_NAMESPACE $CI_COMMIT_REF_NAME"
+   - "git submodule update --remote --init"
+
+gradle:
+  image: gradle:7.3-jdk11
+  stage: build
+  script: 
+      - "gradle --warning-mode all $PROXY test"
+  tags: 
+     - docker2
+  artifacts:
+    when: always
+    reports:
+      junit: build/test-results/test/TEST-*.xml
+    paths:
+        - build/reports/*
+
