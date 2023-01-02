@@ -10,7 +10,7 @@ before_script:
    - "git submodule update --remote --init"
 
 gradle:
-  image: gradle:7.3-jdk11
+  image: cache-ili.univ-artois.fr/proxy_cache/library/gradle:gradle:7.6-jdk11
   stage: build
   script: 
       - "gradle --warning-mode all $PROXY test"
