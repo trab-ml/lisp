@@ -15,7 +15,7 @@ gradle:
   script: 
       - "gradle --warning-mode all $PROXY test"
   tags: 
-     - docker2
+     - docker
   artifacts:
     when: always
     reports:
