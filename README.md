@@ -29,7 +29,7 @@ Ensuite, à chaque mise à jour de ce projet, vous pourrez mettre à jour votre 
 à l'aide des commandes suivantes :
 
 ```
-$ git pull upstream master
+$ git pull upstream main
 $ git push
 ```
 
