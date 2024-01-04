@@ -3,19 +3,19 @@ variables:
   GIT_CHECKOUT: "true"
   GIT_SUBMODULE_STRATEGY: recursive
   PROXY: "-Dhttp.proxyHost=cache-etu.univ-artois.fr -Dhttp.proxyPort=3128 -Dhttps.proxyHost=cache-etu.univ-artois.fr -Dhttps.proxyPort=3128 -Dhttp.nonProxyHosts=localhost"
-  SONARINFO: "-Dsonar.host.url=http://sonarqube.univ-artois.fr/ -Dsonar.login=$SONARTOKEN -Dsonar.projectName=TDD2021_$CI_PROJECT_NAMESPACE  -Dsonar.projectKey=tdd2021_$CI_PROJECT_NAMESPACE"
+  SONARINFO: "-Dsonar.host.url=http://sonarqube.univ-artois.fr/ -Dsonar.login=$SONARTOKEN -Dsonar.projectName=TDD2024_$CI_PROJECT_NAMESPACE  -Dsonar.projectKey=tdd2024_$CI_PROJECT_NAMESPACE"
 
 before_script: 
    - "./checklinks.sh $CI_PROJECT_NAMESPACE $CI_COMMIT_REF_NAME"
    - "git submodule update --remote --init"
 
 gradle:
-  image: cache-ili.univ-artois.fr/proxy_cache/library/gradle:7.6-jdk11
+  image: registry.cril-k8s.lan/docker-hub/library/gradle:8.5-jdk17
   stage: build
   script: 
       - "gradle --warning-mode all $PROXY test"
   tags: 
-     - docker
+     - k8s
   artifacts:
     when: always
     reports:
