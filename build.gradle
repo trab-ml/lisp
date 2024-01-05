@@ -134,6 +134,19 @@ jar {
   }
 }
 
+sourceSets {
+    test {
+        java {
+            srcDirs = ['TDD2024TESTS/src/test/java','TDD2024OWNTESTS/src/test/java','TDD2021HIDDENTESTS/src/test/java']
+            exclude '**/.gitkeep'
+        }
+        resources {
+            srcDirs = ['TDD2024TESTS/src/test/resources','TDD2024OWNTESTS/src/test/resources','TDD2021HIDDENTESTS/src/test/resources']
+            exclude '**/.gitkeep'
+        }
+    }
+}
+
 compileJava {
     sourceCompatibility = '11'
     targetCompatibility = '11'
