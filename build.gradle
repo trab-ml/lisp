@@ -83,12 +83,15 @@ test {
 	include '**/*Tests.class'
 
     dependsOn cleanTest
-    testLogging.showStandardStreams = true
     finalizedBy jacocoTestReport
     finalizedBy copyJBehaveFilesToExpectedLocation
     // finalizedBy cleanTargetDirectory
-    testLogging {
-        events "passed", "skipped", "failed"
+    testlogger {
+        showStandardStreams true
+        showPassed true
+        showSkipped true
+        showFailed true
+        showOnlySlow false
     }
 }
 
