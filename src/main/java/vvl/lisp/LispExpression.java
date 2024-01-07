@@ -1,7 +1,6 @@
 package vvl.lisp;
 
 import vvl.util.ConsList;
-import vvl.util.ConsListFactory;
 
 /**
  * Representation of a Lisp expression (a list of LispItem).
@@ -14,11 +13,11 @@ public class LispExpression implements LispItem {
 	private ConsList<LispItem> expression;
 
 	public LispExpression() {
-		this.expression = ConsListFactory.nil();
+		this.expression = ConsList.nil();
 	}
 	
 	public LispExpression(LispItem ... items ) {
-		this.expression = ConsListFactory.asList(items);
+		this.expression = ConsList.asList(items);
 	}
 
 	public void prepend(LispItem item) {
