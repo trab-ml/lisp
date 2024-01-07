@@ -43,7 +43,7 @@ public class REPL {
         // It would be nice to support expression history as in most common shells.
         // However, it appears that it is not that simple to implement. MR welcome.
 
-        readEvalPrintLoop(LispFactory.makeInterpreter());
+        readEvalPrintLoop(Lisp.makeInterpreter());
         
     }
 }

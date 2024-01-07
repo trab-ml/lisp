@@ -42,4 +42,14 @@ public interface Lisp {
     default LispItem eval(String expr) throws LispError {
         return evaluate(parse(expr));
     }
+    
+    /**
+     * Create a new instance of the interpreter.
+     * 
+     * @return a new lisp interpreter.
+     */
+    static Lisp makeInterpreter() {
+    	// TODO
+        throw new UnsupportedOperationException("Not implemented yet");
+    }
 }
