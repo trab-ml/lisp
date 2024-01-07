@@ -13,7 +13,7 @@ gradle:
   image: registry.cril-k8s.lan/docker-hub/library/gradle:8.5-jdk17
   stage: build
   script: 
-      - "gradle --warning-mode all $PROXY test"
+      - "gradle --warning-mode all -Dsonar.gradle.skipCompile=true $PROXY test"
   tags: 
      - k8s
   artifacts:
