@@ -54,6 +54,9 @@ dependencies {
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation 'com.google.guava:guava:33.0.0-jre'
     implementation 'org.eclipse.jdt:org.eclipse.jdt.annotation:2.2.800'
+    
+    // To avoid SLF4J error message on the console
+	testImplementation 'org.slf4j:slf4j-simple:2.0.10'
 }
 
 apply plugin: 'java'
@@ -104,12 +107,13 @@ jacocoTestReport {
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    toolVersion = "0.8.9"
 }
 
 pitest {
     targetClasses = ['vvl.util.*','vvl.lisp.*','vvl.bdd.*']  
-    junit5PluginVersion = '0.15'
+    junit5PluginVersion = '1.2.1'
+    pitestVersion = '1.15.2'
     threads = 4
     outputFormats = ['HTML','XML']
     timestampedReports = false
