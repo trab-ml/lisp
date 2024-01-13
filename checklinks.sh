@@ -23,7 +23,7 @@ exitcode=$((exitcode || pass))
 
 if [ ! -d "TDD2021HIDDENTESTS" ]; then
    echo "Adding main hidden test repository for branch $2" 
-   git submodule add -b $2 --force https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.univ-artois.fr/dlbenseignement/m1-2020-2021/TDD2021HIDDENTESTS.git 
+   git submodule add -b $2 --force https://alice:glpat-FVuZQG1D1rVqbyTUV8sr@gitlab.univ-artois.fr/dlbenseignement/m1-2020-2021/TDD2021HIDDENTESTS.git 
    pass=$?
    check_status $pass
 fi
