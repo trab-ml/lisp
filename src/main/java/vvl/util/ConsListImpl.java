@@ -19,8 +19,21 @@ public class ConsListImpl<E> implements ConsList<E> {
 
 	@Override
 	public Iterator<E> iterator() {
-		// TODO Auto-generated method stub
-		return null;
+		return new Iterator<E>() {
+	        private ConsList<E> current = ConsListImpl.this;
+
+	        @Override
+	        public boolean hasNext() {
+	            return !current.isEmpty();
+	        }
+
+	        @Override
+	        public E next() {
+	            E eltval = current.car();
+	            current = current.cdr(); // move the cursor
+	            return eltval;
+	        }
+	    };
 	}
 
 	@Override
@@ -33,7 +46,8 @@ public class ConsListImpl<E> implements ConsList<E> {
 	    if (isEmpty()) {
 	        return new ConsListImpl<>(new Cons<>(e, ConsList.nil()));
 	    } else {
-	        return new ConsListImpl<>(new Cons<>(car(), cdr().append(e)));
+	    	Cons<E, ConsList<E>> nwCons = new Cons<>(car(), cdr().append(e));
+	        return new ConsListImpl<>(nwCons);
 	    }
 	}
 	
@@ -71,8 +85,11 @@ public class ConsListImpl<E> implements ConsList<E> {
 
 	@Override
 	public <T> ConsList<T> map(Function<E, T> f) {
-		// TODO Auto-generated method stub
-		return null;
+	    if (isEmpty()) {
+	        return ConsList.nil();
+	    } else {
+	        return new ConsListImpl<>(new Cons<>(f.apply(car()), cdr().map(f)));
+	    }
 	}
 	
 	@Override
