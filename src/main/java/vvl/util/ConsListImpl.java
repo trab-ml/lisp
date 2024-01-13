@@ -8,7 +8,6 @@ import org.checkerframework.common.returnsreceiver.qual.This;
 public class ConsListImpl<E> implements ConsList<E> {
 	
 	private final Cons<E, ConsList<E>> list;
-	private int size = 0;
 
 	public ConsListImpl() {
 		this.list = null;
@@ -16,17 +15,6 @@ public class ConsListImpl<E> implements ConsList<E> {
 	
 	public ConsListImpl(Cons<E, ConsList<E>> list) {
 		this.list = list;
-		this.size = computeSize();
-	}
-	
-	private int computeSize() {
-	    int cpt = 0;
-	    ConsList<E> current = this;
-	    while (!current.isEmpty()) {
-	    	cpt++;
-	        current = current.cdr();
-	    }
-	    return cpt;
 	}
 
 	@Override
@@ -39,16 +27,18 @@ public class ConsListImpl<E> implements ConsList<E> {
 	public ConsList<E> prepend(E e) {
 		return new ConsListImpl<>(new Cons<>(e, this));
 	}
-
+	
 	@Override
-    public ConsList<E> append(E e) {
-		return null;
-    }
+	public ConsList<E> append(E e) {
+	    if (isEmpty()) {
+	        return new ConsListImpl<>(new Cons<>(e, ConsList.nil()));
+	    } else {
+	        return new ConsListImpl<>(new Cons<>(car(), cdr().append(e)));
+	    }
+	}
 	
 	@Override
 	public boolean isEmpty() {
-//		System.out.println("this.list --> " + this.list);
-//		System.out.println("ConsList.nil() --> " + ConsList.nil());
 		return this.list == null;
 	}
 
@@ -70,14 +60,25 @@ public class ConsListImpl<E> implements ConsList<E> {
 
 	@Override
 	public int size() {
-//		System.out.println("ConsList current size: " + size);
-		return size;
+		int cpt = 0;
+	    ConsList<E> curr = this;
+	    while (!curr.isEmpty()) {
+	    	cpt++;
+	        curr = curr.cdr();
+	    }
+	    return cpt;	
 	}
 
 	@Override
 	public <T> ConsList<T> map(Function<E, T> f) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		// TODO Auto-generated method stub
+		return super.equals(obj);
 	}
 
 }
