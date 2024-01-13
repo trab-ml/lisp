@@ -109,7 +109,8 @@ public interface ConsList<E> extends Iterable<E> {
 	 */
 	static <T> ConsList<T> nil() {
 		// TODO
-		throw new UnsupportedOperationException("Not implemented yet");
+//		throw new UnsupportedOperationException("Not implemented yet");
+		return new ConsListImpl<>(null);
 	}
 
 	/**
@@ -120,7 +121,8 @@ public interface ConsList<E> extends Iterable<E> {
 	 */
 	static <T> ConsList<T> singleton(T t) {
 		// TODO
-		throw new UnsupportedOperationException("Not implemented yet");
+//		throw new UnsupportedOperationException("Not implemented yet");
+		return new ConsListImpl<>(new Cons<>(t, null));
 	}
 
 	/**
