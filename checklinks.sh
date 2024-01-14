@@ -35,6 +35,7 @@ if [ ! -d "TDD2024OWNTESTS" ]; then
    pass=$?
    check_status $pass
 fi
+exitcode=$((exitcode || pass))
 
 echo "Tests installation"
 check_status $exitcode
