@@ -118,7 +118,7 @@ public interface ConsList<E> extends Iterable<E> {
 	 * @return a list containing only t
 	 */
 	static <T> ConsList<T> singleton(T t) {		
-		return new ConsListImpl<>(null);
+		return new ConsListImpl<>(new Cons<>(t, null));
 	}
 
 	/**

@@ -1,6 +1,7 @@
 package vvl.util;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 import org.checkerframework.common.returnsreceiver.qual.This;
@@ -59,7 +60,7 @@ public class ConsListImpl<E> implements ConsList<E> {
 	@Override
 	public E car() {
 		if (list == null) {
-			throw new UnsupportedOperationException("car() called on an empty list");
+			throw new NoSuchElementException("car() called on an empty list");
 		}
 		return list.left();
 	}
@@ -67,7 +68,7 @@ public class ConsListImpl<E> implements ConsList<E> {
 	@Override
 	public ConsList<E> cdr() {
 		if (list == null) {
-			throw new UnsupportedOperationException("cdr() called on an empty list");
+			return ConsList.nil();
 		}
 		return list.right();
 	}
@@ -76,10 +77,11 @@ public class ConsListImpl<E> implements ConsList<E> {
 	public int size() {
 		int cpt = 0;
 		ConsList<E> curr = this;
-		while (!curr.isEmpty()) {
+		while (curr != null && !curr.isEmpty()) {
 			cpt++;
 			curr = curr.cdr();
 		}
+		System.out.println("cpt --> " + cpt);
 		return cpt;
 	}
 
@@ -123,10 +125,11 @@ public class ConsListImpl<E> implements ConsList<E> {
 					builder.append(" ");
 				}
 				cpt++;
-				builder.append(it.next().toString());
+				builder.append(it.next());
 			}
 		}
 		builder.append(")");
+//		System.out.println(builder.toString());
 		return builder.toString();
 	}
 
