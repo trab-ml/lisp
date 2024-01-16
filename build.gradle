@@ -17,7 +17,12 @@ plugins {
 }
 
 repositories {
-    // Use JCenter for resolving dependencies.
+    // Use local cache by default
+    maven {
+        url "http://cache-ili.univ-artois.fr:8081/repository/maven-central/"
+        allowInsecureProtocol true
+    }
+    // Use Maven central if not found on previous one
     mavenCentral()
 }
 
