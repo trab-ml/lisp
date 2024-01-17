@@ -23,7 +23,7 @@ repositories {
         allowInsecureProtocol true
     }
     // Use Maven central if not found on previous one
-    mavenCentral()
+    // mavenCentral()
 }
 
 dependencies {
