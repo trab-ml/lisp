@@ -17,7 +17,7 @@ public class LispNumber implements LispItem {
 	public Number value() {
 		return element;
 	}
-
+	
 	@Override
 	public String toString() {
 		return element.toString();
