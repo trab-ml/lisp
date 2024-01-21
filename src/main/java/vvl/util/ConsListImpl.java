@@ -81,7 +81,6 @@ public class ConsListImpl<E> implements ConsList<E> {
 			cpt++;
 			curr = curr.cdr();
 		}
-		System.out.println("cpt --> " + cpt);
 		return cpt;
 	}
 
@@ -129,7 +128,6 @@ public class ConsListImpl<E> implements ConsList<E> {
 			}
 		}
 		builder.append(")");
-//		System.out.println(builder.toString());
 		return builder.toString();
 	}
 
