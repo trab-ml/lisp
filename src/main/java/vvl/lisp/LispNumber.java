@@ -46,4 +46,18 @@ public class LispNumber implements LispItem {
 			return null;
 		}
 	}
+	
+	public LispNumber add(LispNumber lispNb) {
+		Integer result = ((Integer) this.value()) + ((Integer) lispNb.value());
+		return new LispNumber(result);
+	}
+	
+	public LispNumber mult(LispNumber lispNb) {
+		Integer result = ((Integer) this.value()) * ((Integer) lispNb.value());
+		return new LispNumber(result);
+	}
+	
+	public boolean compareTo(LispNumber lispNb) {
+		return ((Integer) this.value()) > ((Integer) lispNb.value());
+	}
 }
