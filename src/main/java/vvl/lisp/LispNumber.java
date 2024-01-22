@@ -25,8 +25,11 @@ public class LispNumber implements LispItem {
 
 	@Override
 	public boolean equals(Object o) {
+//		System.out.println("o.getClass() " + o.getClass());
+//		System.out.println("before instanceOf " + element + "...");
 		if (o instanceof LispNumber) {
 			LispNumber e = (LispNumber) o;
+//			System.out.println(element + " VS " + e.element);
 			return element.equals(e.element);
 		}
 		return false;
