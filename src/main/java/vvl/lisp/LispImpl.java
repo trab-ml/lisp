@@ -38,15 +38,17 @@ public class LispImpl implements Lisp {
 			} else if (firstChar == '(') {
 				LispExpression myList = parseExpression();
 				return myList;
+			} else if (firstChar == ')') {
+				throw new LispError("No opening parenthesis!");
 			} else if (Character.isDigit(firstChar)) {
 				return parseNumber();
 			} else if (Character.isLetter(firstChar) || isOperator(firstChar)) {
-				if ((firstChar == '-' && index + 1 < input.length() && 
-			            (Character.isDigit(input.charAt(index + 1)) || input.charAt(index + 1) == '.'))) {
-			        return parseNumber();
-			    } else {
-			        return parseIdentifier();
-			    }
+				if ((firstChar == '-' && index + 1 < input.length()
+						&& (Character.isDigit(input.charAt(index + 1)) || input.charAt(index + 1) == '.'))) {
+					return parseNumber();
+				} else {
+					return parseIdentifier();
+				}
 			} else {
 				throw new LispError("Unexpected character: '" + firstChar + "'");
 			}
@@ -74,10 +76,15 @@ public class LispImpl implements Lisp {
 			LispExpression expression = new LispExpression();
 			consumeChar('(');
 			skipWhiteSpace();
+
 			while (index < input.length() && input.charAt(index) != ')') {
 				LispItem item = parse();
 				expression.append(item);
 				skipWhiteSpace();
+			}
+
+			if (index == input.length() || input.charAt(index) != ')') {
+				throw new LispError("No ending parenthesis!");
 			}
 			consumeChar(')');
 			return expression;
@@ -88,7 +95,8 @@ public class LispImpl implements Lisp {
 			int inputLen = input.length();
 			char currentChar = input.charAt(index);
 
-			while (Character.isDigit(currentChar) || currentChar == '-' || currentChar == '.' || currentChar == 'E') {
+			while (Character.isDigit(currentChar) || currentChar == '-' || currentChar == '.' || currentChar == 'e'
+					|| currentChar == 'E') {
 				numStr.append(currentChar);
 				index++;
 				if (index >= inputLen) {
@@ -111,14 +119,21 @@ public class LispImpl implements Lisp {
 			return result;
 		}
 
-		private LispIdentifier parseIdentifier() {
+		private LispIdentifier parseIdentifier() throws LispError {
 			StringBuilder identifier = new StringBuilder();
-			while (index < input.length() && input.charAt(index) != ')' && !Character.isWhitespace(input.charAt(index))) {
+			int inputLen = input.length();
+			while (index < inputLen && input.charAt(index) != ')' && !Character.isWhitespace(input.charAt(index))) {
 				identifier.append(input.charAt(index));
 				index++;
 			}
-			LispIdentifier id = new LispIdentifier(identifier.toString());
-			return id;
+
+			String lispId = identifier.toString();
+			String inputSubstring = input.substring(0, index - 1);
+			if (index < inputLen && input.charAt(index) == ')' && (inputSubstring.indexOf('(') == -1)) {
+				throw new LispError("No opening parenthesis!");
+			}
+
+			return new LispIdentifier(lispId);
 		}
 
 		private boolean isOperator(char op) {
