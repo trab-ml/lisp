@@ -50,6 +50,7 @@ public interface Lisp {
      */
     static Lisp makeInterpreter() {
     	// TODO
-        throw new UnsupportedOperationException("Not implemented yet");
+//        throw new UnsupportedOperationException("Not implemented yet");
+    	return new LispImpl();
     }
 }

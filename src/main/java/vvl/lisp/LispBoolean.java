@@ -67,6 +67,15 @@ public final class LispBoolean implements LispItem {
     public static LispBoolean valueOf(boolean b) {
         return b ? TRUE : FALSE;
     }
+    
+    /**
+     * Check if the given parameter is a {@link LispBoolean}
+     * @param b
+     * @return a {@link LispBoolean} if it is, otherwise null
+     */
+    public static LispBoolean isLispBoolean(String b) {
+    	return "#t" == b ? TRUE : ("#f" == b ? FALSE : null);
+    }
 
     /**
      * Retrieve a {@link LispBoolean} from its textual representation.
