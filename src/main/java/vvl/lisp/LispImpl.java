@@ -1,13 +1,39 @@
 package vvl.lisp;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 public class LispImpl implements Lisp {
 
 	@Override
 	public LispItem parse(String expr) throws LispError {
+		expr = expr.trim();
 		LispParser parser = new LispParser(expr);
-		return parser.parse();
+		LispItem parsed = parser.parse();
+		ArrayList<LispItem> parsedLispItems = parser.getParsedLispItems();
+
+//		expr has been entirely parsed (not only the first LispItem)?		
+		int index = parser.getIndex();
+		int exprLen = expr.length();
+		while (index < exprLen) {
+			parsed = parser.parse();
+			index = parser.getIndex();
+		}
+
+		if (parsedLispItems.size() == 2) {
+			Iterator<LispItem> iterator = parsedLispItems.iterator();
+			LispItem firstItem = iterator.next();
+			LispItem secondItem = iterator.next();
+			if ((firstItem instanceof LispExpression && secondItem instanceof LispIdentifier)
+					|| (firstItem instanceof LispIdentifier && secondItem instanceof LispIdentifier)
+					|| (firstItem instanceof LispExpression && secondItem instanceof LispExpression)) {
+				throw new LispError("Remaining data cannot be ignored!");
+			}
+		}
+
+		return parsed;
+
 	}
 
 	@Override
@@ -18,40 +44,75 @@ public class LispImpl implements Lisp {
 	private static class LispParser {
 
 		private final String input;
-		private int index;
+		private int index = 0;
+		private ArrayList<LispItem> lispItemsList = new ArrayList<LispItem>();
+		private Boolean idIsInsideAnExpr = false;
+		private int exprNestingLevel = 0;
 
 		public LispParser(String input) {
 			this.input = input.trim();
-			this.index = 0;
+		}
+
+		public ArrayList<LispItem> getParsedLispItems() {
+			return lispItemsList;
+		}
+
+		public int getIndex() {
+			return index;
+		}
+		
+		private void insideAnExpr(LispItem it) {
+			if (!idIsInsideAnExpr)
+				lispItemsList.add(it);
 		}
 
 		private LispItem parse() throws LispError {
 			skipWhiteSpace();
 			if (index >= input.length()) {
-				throw new LispError("Empty expression");
+				throw new LispError("Unauthorized expression --> `" + input.substring(index, input.length()) + "`");
 			}
 
 			char firstChar = input.charAt(index);
+			LispItem result;
 
-			if (firstChar == '#') {
-				return parseBoolean();
-			} else if (firstChar == '(') {
-				LispExpression myList = parseExpression();
-				return myList;
-			} else if (firstChar == ')') {
-				throw new LispError("No opening parenthesis!");
-			} else if (Character.isDigit(firstChar)) {
-				return parseNumber();
-			} else if (Character.isLetter(firstChar) || isOperator(firstChar)) {
-				if ((firstChar == '-' && index + 1 < input.length()
-						&& (Character.isDigit(input.charAt(index + 1)) || input.charAt(index + 1) == '.'))) {
-					return parseNumber();
-				} else {
-					return parseIdentifier();
+			switch (firstChar) {
+			case '#':
+				result = parseBoolean();
+				if (!idIsInsideAnExpr)
+					lispItemsList.add(result);
+				break;
+
+			case '(':
+				exprNestingLevel++;
+				idIsInsideAnExpr = true;
+				result = parseExpression();
+				exprNestingLevel--;
+				idIsInsideAnExpr = false;
+				if (exprNestingLevel == 0) {
+					lispItemsList.add(result);
 				}
-			} else {
-				throw new LispError("Unexpected character: '" + firstChar + "'");
+				break;
+
+			case ')':
+				throw new LispError("No opening parenthesis!");
+
+			default:
+				if (Character.isDigit(firstChar)) {
+					result = parseNumber();
+				} else if (Character.isLetter(firstChar) || isOperator(firstChar)) {
+					if (firstChar == '-' && index + 1 < input.length()
+							&& (Character.isDigit(input.charAt(index + 1)) || input.charAt(index + 1) == '.')) {
+						result = parseNumber();
+					} else {
+						result = parseIdentifier();
+					}
+				} else {
+					throw new LispError("Unexpected character: '" + firstChar + "'");
+				}
+				insideAnExpr(result);
 			}
+
+			return result;
 		}
 
 		private LispBoolean parseBoolean() throws LispError {
@@ -79,7 +140,8 @@ public class LispImpl implements Lisp {
 
 			while (index < input.length() && input.charAt(index) != ')') {
 				LispItem item = parse();
-				expression.append(item);
+				if (item != null)
+					expression.append(item);
 				skipWhiteSpace();
 			}
 
@@ -87,6 +149,7 @@ public class LispImpl implements Lisp {
 				throw new LispError("No ending parenthesis!");
 			}
 			consumeChar(')');
+			skipWhiteSpace();
 			return expression;
 		}
 
