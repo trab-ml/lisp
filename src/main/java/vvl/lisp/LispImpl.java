@@ -2,37 +2,27 @@ package vvl.lisp;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 public class LispImpl implements Lisp {
 
 	@Override
 	public LispItem parse(String expr) throws LispError {
-		expr = expr.trim();
-		LispParser parser = new LispParser(expr);
-		LispItem parsed = parser.parse();
-		ArrayList<LispItem> parsedLispItems = parser.getParsedLispItems();
+		try {
+            LispParser parser = new LispParser(expr);
+            LispItem parsed = parser.parse();
 
-//		expr has been entirely parsed (not only the first LispItem)?		
-		int index = parser.getIndex();
-		int exprLen = expr.length();
-		while (index < exprLen) {
-			parsed = parser.parse();
-			index = parser.getIndex();
-		}
+            while (!parser.isInputEmpty()) {
+                parsed = parser.parse();
+            }
 
-		if (parsedLispItems.size() == 2) {
-			Iterator<LispItem> iterator = parsedLispItems.iterator();
-			LispItem firstItem = iterator.next();
-			LispItem secondItem = iterator.next();
-			if ((firstItem instanceof LispExpression && secondItem instanceof LispIdentifier)
-					|| (firstItem instanceof LispIdentifier && secondItem instanceof LispIdentifier)
-					|| (firstItem instanceof LispExpression && secondItem instanceof LispExpression)) {
-				throw new LispError("Remaining data cannot be ignored!");
-			}
-		}
+            if (parser.getParsedLispItems().size() == 2) {
+                throw new LispError("Unexpected data after parsing complete!");
+            }
 
-		return parsed;
+            return parsed;
+        } catch (Exception e) {
+            throw new LispError("Error while parsing expression: " + e.getMessage(), e);
+        }
 
 	}
 
@@ -46,7 +36,6 @@ public class LispImpl implements Lisp {
 		private final String input;
 		private int index = 0;
 		private ArrayList<LispItem> lispItemsList = new ArrayList<LispItem>();
-		private Boolean idIsInsideAnExpr = false;
 		private int exprNestingLevel = 0;
 
 		public LispParser(String input) {
@@ -56,14 +45,18 @@ public class LispImpl implements Lisp {
 		public ArrayList<LispItem> getParsedLispItems() {
 			return lispItemsList;
 		}
-
-		public int getIndex() {
-			return index;
-		}
 		
+		public boolean isInputEmpty() {
+            return index >= input.length();
+        }
+
 		private void insideAnExpr(LispItem it) {
-			if (!idIsInsideAnExpr)
+			if (exprNestingLevel == 0)
 				lispItemsList.add(it);
+		}
+
+		private boolean numberFollowsOperator(String in, Character c, int i) {
+			return c == '-' && i + 1 < in.length() && (Character.isDigit(in.charAt(i + 1)) || in.charAt(i + 1) == '.');
 		}
 
 		private LispItem parse() throws LispError {
@@ -78,19 +71,15 @@ public class LispImpl implements Lisp {
 			switch (firstChar) {
 			case '#':
 				result = parseBoolean();
-				if (!idIsInsideAnExpr)
-					lispItemsList.add(result);
+				insideAnExpr(result);
 				break;
 
 			case '(':
 				exprNestingLevel++;
-				idIsInsideAnExpr = true;
 				result = parseExpression();
+
 				exprNestingLevel--;
-				idIsInsideAnExpr = false;
-				if (exprNestingLevel == 0) {
-					lispItemsList.add(result);
-				}
+				insideAnExpr(result);
 				break;
 
 			case ')':
@@ -100,12 +89,7 @@ public class LispImpl implements Lisp {
 				if (Character.isDigit(firstChar)) {
 					result = parseNumber();
 				} else if (Character.isLetter(firstChar) || isOperator(firstChar)) {
-					if (firstChar == '-' && index + 1 < input.length()
-							&& (Character.isDigit(input.charAt(index + 1)) || input.charAt(index + 1) == '.')) {
-						result = parseNumber();
-					} else {
-						result = parseIdentifier();
-					}
+					result = (numberFollowsOperator(input, firstChar, index)) ? parseNumber() : parseIdentifier();
 				} else {
 					throw new LispError("Unexpected character: '" + firstChar + "'");
 				}
@@ -137,24 +121,24 @@ public class LispImpl implements Lisp {
 			LispExpression expression = new LispExpression();
 			consumeChar('(');
 			skipWhiteSpace();
+			int inputLen = input.length();
 
-			while (index < input.length() && input.charAt(index) != ')') {
+			while (index < inputLen && input.charAt(index) != ')') {
 				LispItem item = parse();
 				if (item != null)
 					expression.append(item);
 				skipWhiteSpace();
 			}
 
-			if (index == input.length() || input.charAt(index) != ')') {
+			if (index == inputLen || input.charAt(index) != ')') {
 				throw new LispError("No ending parenthesis!");
 			}
 			consumeChar(')');
-			skipWhiteSpace();
 			return expression;
 		}
 
 		private LispNumber parseNumber() throws NumberFormatException, LispError {
-			StringBuilder numStr = new StringBuilder(); // consume the first char of a potential number
+			StringBuilder numStr = new StringBuilder();
 			int inputLen = input.length();
 			char currentChar = input.charAt(index);
 
@@ -173,13 +157,11 @@ public class LispImpl implements Lisp {
 				return new LispNumber(Double.valueOf(lispNumStr));
 			}
 
-			LispNumber result;
 			try {
-				result = new LispNumber(new BigInteger(lispNumStr));
+				return new LispNumber(new BigInteger(lispNumStr));
 			} catch (NumberFormatException nfe) {
-				throw new LispError("Deal with smtg which is not a number", nfe);
+				throw new LispError("Not a number", nfe);
 			}
-			return result;
 		}
 
 		private LispIdentifier parseIdentifier() throws LispError {
@@ -204,14 +186,10 @@ public class LispImpl implements Lisp {
 		}
 
 		private void consumeChar(char expected) throws LispError {
-			if (index < input.length()) {
-				char currentChar = input.charAt(index);
-				if (currentChar == expected) {
-					index++;
-				} else {
-					throw new LispError("Expected '" + expected + "', found '" + currentChar + "'");
-				}
-			}
+			assert index < input.length() : "Unexpected end!";
+			char currentChar = input.charAt(index);
+			assert (currentChar == expected) : "Expected '" + expected + "', found '" + currentChar + "'";
+			index++;
 		}
 
 		private void skipWhiteSpace() {
