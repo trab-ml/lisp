@@ -4,8 +4,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
 
-import org.checkerframework.common.returnsreceiver.qual.This;
-
 public class ConsListImpl<E> implements ConsList<E> {
 
 	private final Cons<E, ConsList<E>> list;
@@ -22,10 +20,16 @@ public class ConsListImpl<E> implements ConsList<E> {
 	public Iterator<E> iterator() {
 		return new Iterator<E>() {
 			private ConsList<E> current = ConsListImpl.this;
-
+			
 			@Override
 			public boolean hasNext() {
-				return !current.isEmpty();
+				// debugging...
+				if (current == null) {
+//					System.out.println("OUPS current = null");
+					return false;
+				}
+				
+				return !current.isEmpty(); // old
 			}
 
 			@Override

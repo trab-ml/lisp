@@ -2,6 +2,8 @@ package vvl.lisp;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LispImpl implements Lisp {
 
@@ -23,7 +25,6 @@ public class LispImpl implements Lisp {
         } catch (Exception e) {
             throw new LispError("Error while parsing expression: " + e.getMessage(), e);
         }
-
 	}
 
 	@Override
@@ -77,7 +78,6 @@ public class LispImpl implements Lisp {
 			case '(':
 				exprNestingLevel++;
 				result = parseExpression();
-
 				exprNestingLevel--;
 				insideAnExpr(result);
 				break;
@@ -98,24 +98,16 @@ public class LispImpl implements Lisp {
 
 			return result;
 		}
-
+		
 		private LispBoolean parseBoolean() throws LispError {
-			StringBuilder boolStr = new StringBuilder();
-			boolStr.append(input.charAt(index++)); // Consume '#'
-
-			while (index < input.length() && !Character.isWhitespace(input.charAt(index))
-					&& input.charAt(index) != ')') {
-				boolStr.append(input.charAt(index++)); // Consume a char
-			}
-
-			if (boolStr.toString().equals("#t")) {
-				return LispBoolean.TRUE;
-			} else if (boolStr.toString().equals("#f")) {
-				return LispBoolean.FALSE;
-			} else {
-				throw new LispError("Invalid boolean representation: " + boolStr.toString());
-			}
-		}
+            Matcher matcher = Pattern.compile("#[tf]").matcher(input.substring(index));
+            if (matcher.find()) {
+                index += matcher.group().length();
+                return LispBoolean.valueOf(matcher.group().equals("#t"));
+            } else {
+                throw new LispError("Invalid boolean representation");
+            }
+        }
 
 		private LispExpression parseExpression() throws LispError {
 			LispExpression expression = new LispExpression();
@@ -133,6 +125,7 @@ public class LispImpl implements Lisp {
 			if (index == inputLen || input.charAt(index) != ')') {
 				throw new LispError("No ending parenthesis!");
 			}
+			
 			consumeChar(')');
 			return expression;
 		}
@@ -142,8 +135,7 @@ public class LispImpl implements Lisp {
 			int inputLen = input.length();
 			char currentChar = input.charAt(index);
 
-			while (Character.isDigit(currentChar) || currentChar == '-' || currentChar == '.' || currentChar == 'e'
-					|| currentChar == 'E') {
+			while (String.valueOf(currentChar).matches("[\\d\\-\\.eE]")) {
 				numStr.append(currentChar);
 				index++;
 				if (index >= inputLen) {
@@ -153,7 +145,7 @@ public class LispImpl implements Lisp {
 			}
 
 			String lispNumStr = numStr.toString();
-			if (lispNumStr.indexOf('.') != -1) { // potential double!
+			if (lispNumStr.contains(".")) { // potential double!
 				return new LispNumber(Double.valueOf(lispNumStr));
 			}
 
@@ -163,27 +155,35 @@ public class LispImpl implements Lisp {
 				throw new LispError("Not a number", nfe);
 			}
 		}
-
+		
 		private LispIdentifier parseIdentifier() throws LispError {
-			StringBuilder identifier = new StringBuilder();
-			int inputLen = input.length();
-			while (index < inputLen && input.charAt(index) != ')' && !Character.isWhitespace(input.charAt(index))) {
-				identifier.append(input.charAt(index));
-				index++;
-			}
+		    StringBuilder identifier = new StringBuilder();
+		    int inputLen = input.length();
 
-			String lispId = identifier.toString();
-			String inputSubstring = input.substring(0, index - 1);
-			if (index < inputLen && input.charAt(index) == ')' && (inputSubstring.indexOf('(') == -1)) {
-				throw new LispError("No opening parenthesis!");
-			}
+		    Matcher matcher = Pattern.compile("[^\\s()]+").matcher(input.substring(index));
+		    
+		    if (matcher.find()) {
+		        identifier.append(matcher.group());
+		        index += matcher.group().length();
+		    } else {
+		        throw new LispError("Unable to parse identifier");
+		    }
 
-			return new LispIdentifier(lispId);
+		    String lispId = identifier.toString();
+		    String inputSubstring = input.substring(0, index - 1);
+		    
+		    if (index < inputLen && input.charAt(index) == ')' && !inputSubstring.contains("(")) {
+		        throw new LispError("No opening parenthesis!");
+		    }
+
+		    return new LispIdentifier(lispId);
 		}
 
+		
 		private boolean isOperator(char op) {
-			return op == '+' || op == '-' || op == '*' || op == '/' || op == '>';
-		}
+            String operatorsRegex = "[+\\-*/<>]";
+            return String.valueOf(op).matches(operatorsRegex);
+        }
 
 		private void consumeChar(char expected) throws LispError {
 			assert index < input.length() : "Unexpected end!";

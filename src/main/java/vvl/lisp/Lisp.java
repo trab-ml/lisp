@@ -49,8 +49,6 @@ public interface Lisp {
      * @return a new lisp interpreter.
      */
     static Lisp makeInterpreter() {
-    	// TODO
-//        throw new UnsupportedOperationException("Not implemented yet");
     	return new LispImpl();
     }
 }
