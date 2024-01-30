@@ -32,6 +32,9 @@ public class LispImpl implements Lisp {
 		return null;
 	}
 
+	/**
+     * Parse a given string and turn it into LispItems.
+     */
 	private static class LispParser {
 
 		private final String input;
@@ -57,7 +60,7 @@ public class LispImpl implements Lisp {
 		}
 
 		private boolean numberFollowsOperator(String in, Character c, int i) {
-			return c == '-' && i + 1 < in.length() && (Character.isDigit(in.charAt(i + 1)) || in.charAt(i + 1) == '.');
+			return c == '-' && i + 1 < in.length() && Character.isDigit(in.charAt(i + 1));
 		}
 
 		private LispItem parse() throws LispError {
@@ -114,6 +117,7 @@ public class LispImpl implements Lisp {
 			consumeChar('(');
 			skipWhiteSpace();
 			int inputLen = input.length();
+			int inputIndex = index;
 
 			while (index < inputLen && input.charAt(index) != ')') {
 				LispItem item = parse();
@@ -121,9 +125,12 @@ public class LispImpl implements Lisp {
 					expression.append(item);
 				skipWhiteSpace();
 			}
-
-			if (index == inputLen || input.charAt(index) != ')') {
-				throw new LispError("No ending parenthesis!");
+			
+			// empty or misformed expr
+			if (index == inputIndex 
+					|| index == inputLen 
+					|| input.charAt(index) != ')') {
+				throw new LispError("Misformed Expression");
 			}
 			
 			consumeChar(')');

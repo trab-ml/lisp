@@ -23,13 +23,11 @@ public class ConsListImpl<E> implements ConsList<E> {
 			
 			@Override
 			public boolean hasNext() {
-				// debugging...
 				if (current == null) {
-//					System.out.println("OUPS current = null");
 					return false;
 				}
 				
-				return !current.isEmpty(); // old
+				return !current.isEmpty();
 			}
 
 			@Override
