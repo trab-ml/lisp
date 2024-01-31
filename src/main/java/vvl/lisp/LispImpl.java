@@ -66,7 +66,7 @@ public class LispImpl implements Lisp {
 		private LispItem parse() throws LispError {
 			skipWhiteSpace();
 			if (index >= input.length()) {
-				throw new LispError("Unauthorized expression --> `" + input.substring(index, input.length()) + "`");
+				throw new LispError("Unauthorized expression");
 			}
 
 			char firstChar = input.charAt(index);
@@ -126,9 +126,14 @@ public class LispImpl implements Lisp {
 				skipWhiteSpace();
 			}
 			
+			if (expression.toString().matches("\\([<>]\\)")) {
+				throw new LispError("match --> " + expression.toString());
+			}
+			
 			// empty or misformed expr
-			if (index == inputIndex 
-					|| index == inputLen 
+//			if (index == inputIndex ) {}
+			
+			if (index == inputLen 
 					|| input.charAt(index) != ')') {
 				throw new LispError("Misformed Expression");
 			}
