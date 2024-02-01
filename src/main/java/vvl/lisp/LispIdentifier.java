@@ -32,16 +32,4 @@ public class LispIdentifier implements LispItem {
     public int hashCode() {
         return id.hashCode();
     }
-    
-    /*
-     * Analyze if a given string is a {@link LispIdentifier}
-     * @return an instance of a {@link LispIdentifier} or null
-     */
-    public static LispIdentifier isLispIdentifier(String s) {
-    	if (s != null && !s.isEmpty()) {
-			return new LispIdentifier(s);
-		} else {
-			return null;
-		}
-    }
 }

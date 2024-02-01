@@ -26,11 +26,30 @@ public class LispImpl implements Lisp {
             throw new LispError("Error while parsing expression: " + e.getMessage(), e);
         }
 	}
-
+	
 	@Override
-	public LispItem evaluate(LispItem ex) {
-		return null;
-	}
+	public LispItem evaluate(LispItem ex) throws LispError {
+        if (ex instanceof LispExpression) {
+            LispExpression expression = (LispExpression) ex;
+            if (expression.values().isEmpty()) {
+                throw new LispError("Empty expression");
+            }
+
+            LispItem firstItem = expression.values().car();
+
+            if (firstItem instanceof LispIdentifier) {
+                String operator = ((LispIdentifier) firstItem).toString();
+
+                if (isArithmeticOperator(operator)) {
+                    return evaluateArithmeticExpression(expression);
+                }
+            }
+
+            throw new LispError("Unsupported operator: " + firstItem);
+        }
+
+        return ex;
+    }
 
 	/**
      * Parse a given string and turn it into LispItems.
@@ -209,5 +228,23 @@ public class LispImpl implements Lisp {
 				index++;
 			}
 		}
+	}
+	
+	/*
+	 * Helpers to evaluate a parse LispItem
+	 */
+	
+	private boolean isArithmeticOperator(String operator) {
+        return operator.matches("[+\\-*/]");
+    }
+
+	/**
+	 * 
+	 * @param expression
+	 * @return
+	 * @throws LispError
+	 */
+	private LispNumber evaluateArithmeticExpression(LispExpression expression) throws LispError {
+		return null;
 	}
 }

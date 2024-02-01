@@ -31,7 +31,7 @@ public class ConsListImpl<E> implements ConsList<E> {
 			}
 
 			@Override
-			public E next() {
+			public E next() throws NoSuchElementException {
 				E eltval = current.car();
 				current = current.cdr(); // move the cursor
 				return eltval;
@@ -114,6 +114,13 @@ public class ConsListImpl<E> implements ConsList<E> {
 		}
 		return !it1.hasNext() && !it2.hasNext();
 	}
+	
+	@Override
+    public int hashCode() {
+        int result = 17;
+        result = 31 * result + list.hashCode();
+        return result;
+    }
 
 	@Override
 	public String toString() {
