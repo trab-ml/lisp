@@ -108,7 +108,7 @@ public interface ConsList<E> extends Iterable<E> {
 	 * @return an empty list
 	 */
 	static <T> ConsList<T> nil() {
-		return new ConsListImpl<>();	
+		return new ConsListImpl<>();
 	}
 
 	/**

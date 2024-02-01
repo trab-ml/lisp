@@ -2,7 +2,7 @@ variables:
   GIT_STRATEGY: clone
   GIT_CHECKOUT: "true"
   GIT_SUBMODULE_STRATEGY: recursive
-  PROXY: "-Dhttp.proxyHost=cache-etu.univ-artois.fr -Dhttp.proxyPort=3128 -Dhttps.proxyHost=cache-etu.univ-artois.fr -Dhttps.proxyPort=3128 -Dhttp.nonProxyHosts=localhost"
+  PROXY: "-Dhttp.proxyHost=cache-etu.univ-artois.fr -Dhttp.proxyPort=3128 -Dhttps.proxyHost=cache-etu.univ-artois.fr -Dhttps.proxyPort=3128 -Dhttp.nonProxyHosts=localhost|*.cril-k8s.lan"
   SONARINFO: "-Dsonar.host.url=http://sonarqube.univ-artois.fr/ -Dsonar.login=$SONARTOKEN -Dsonar.projectName=TDD2024_$CI_PROJECT_NAMESPACE  -Dsonar.projectKey=tdd2024_$CI_PROJECT_NAMESPACE"
 
 before_script: 
