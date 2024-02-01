@@ -14,6 +14,7 @@ gradle:
   stage: build
   script: 
       - "gradle --warning-mode all -Dsonar.gradle.skipCompile=true $PROXY test"
+      - "gradle -Dsonar.gradle.skipCompile=true $PROXY $SONARINFO sonar"
   tags: 
      - k8s
   artifacts:
