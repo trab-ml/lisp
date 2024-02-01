@@ -32,9 +32,13 @@ public class ConsListImpl<E> implements ConsList<E> {
 
 			@Override
 			public E next() throws NoSuchElementException {
-				E eltval = current.car();
-				current = current.cdr(); // move the cursor
-				return eltval;
+				try {
+					E eltval = current.car();
+					current = current.cdr(); // move the cursor
+					return eltval;
+				} catch (NoSuchElementException e) {
+					throw new NoSuchElementException();
+				}
 			}
 		};
 	}
