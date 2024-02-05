@@ -31,6 +31,23 @@ public class LispExpression implements LispItem {
 	public ConsList<LispItem> values() {
 		return expression;
 	}
+	
+	// the item at index n
+	public LispItem nth(int n) {
+		int len = this.expression.size() - n;
+		if (len <= 0) {
+			return null;
+		}
+		
+		ConsList<LispItem> currentExpr = this.expression;
+		LispItem nthItem = null;
+		while (len > 0 && !currentExpr.isEmpty()) {
+			currentExpr = currentExpr.cdr();
+			len--;
+		}
+		nthItem = currentExpr.car();
+		return nthItem;
+	}
 
 	@Override
 	public String toString() {

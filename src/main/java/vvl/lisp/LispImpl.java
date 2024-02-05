@@ -231,20 +231,91 @@ public class LispImpl implements Lisp {
 	}
 	
 	/*
-	 * Helpers to evaluate a parse LispItem
+	 * Helpers to evaluate a parsed LispItem
 	 */
+	
+	private boolean isBooleanOperator(String operator) {
+	    return operator.matches("and|or|not");
+	}
 	
 	private boolean isArithmeticOperator(String operator) {
         return operator.matches("[+\\-*/]");
     }
+	
+	private LispItem evaluateIdentifier(LispIdentifier identifier) throws LispError {
+	    String id = identifier.toString();
 
+	    switch (id) {
+	        case "true":
+	            return LispBoolean.TRUE;
+	        case "false":
+	            return LispBoolean.FALSE;
+	        default:
+	            throw new LispError("Undefined identifier: " + id);
+	    }
+	}
+	
+	private LispBoolean evaluateIdentifierExpression(LispExpression expression) throws LispError {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
+	
 	/**
-	 * 
+	 * Evaluate an expression of {@link LispBoolean}
 	 * @param expression
-	 * @return
+	 * @return a {@link LispBoolean}
 	 * @throws LispError
 	 */
-	private LispNumber evaluateArithmeticExpression(LispExpression expression) throws LispError {
-		return null;
+	private LispBoolean evaluateBooleanExpression(LispExpression expression) throws LispError {
+	    if (expression.values().size() < 3) {
+	        throw new LispError("Boolean expressions must have at least two operands");
+	    }
+
+	    LispItem operatorItem = expression.values().car();
+	    String operator = ((LispIdentifier) operatorItem).toString();
+
+	    if (!isBooleanOperator(operator)) {
+	        throw new LispError("Unsupported boolean operator: " + operator);
+	    }
+
+	    LispItem operand1Item = expression.nth(1);
+	    LispItem operand2Item = expression.nth(2);
+
+	    if (!(operand1Item instanceof LispBoolean) || !(operand2Item instanceof LispBoolean)) {
+	        throw new LispError("Operands of boolean expressions must be booleans");
+	    }
+
+	    boolean operand1 = ((LispBoolean) operand1Item).value();
+	    boolean operand2 = ((LispBoolean) operand2Item).value();
+
+	    switch (operator) {
+	        case "and":
+	            return LispBoolean.valueOf(operand1 && operand2);
+	        case "or":
+	            return LispBoolean.valueOf(operand1 || operand2);
+	        case "not":
+	            return LispBoolean.valueOf(!operand1);
+	        default:
+	            throw new LispError("Unsupported boolean operator: " + operator);
+	    }
+	}
+
+	/**
+	 * Evaluate an expression of {@link LispNumber}
+	 * @param expression
+	 * @return a {@link LispNumber}
+	 * @throws LispError
+	 */
+	private LispItem evaluateArithmeticExpression(LispExpression expression) throws LispError {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
+	
+	/**
+	 * Evaluate an expression of {@link LispItem}
+	 * @param expression
+	 * @return a {@link LispItem}
+	 * @throws LispError
+	 */
+	private LispItem evaluateExpression(LispExpression expression) throws LispError {
+		throw new UnsupportedOperationException("Not implemented yet");
 	}
 }
