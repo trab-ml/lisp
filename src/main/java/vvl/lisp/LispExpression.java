@@ -32,6 +32,10 @@ public class LispExpression implements LispItem {
 		return expression;
 	}
 	
+	public boolean isEmpty() {
+		return this.expression.isEmpty();
+	}
+	
 	// the item at index n
 	public LispItem nth(int n) {
 		int len = this.expression.size() - n;

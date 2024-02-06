@@ -26,30 +26,6 @@ public class LispImpl implements Lisp {
             throw new LispError("Error while parsing expression: " + e.getMessage(), e);
         }
 	}
-	
-	@Override
-	public LispItem evaluate(LispItem ex) throws LispError {
-        if (ex instanceof LispExpression) {
-            LispExpression expression = (LispExpression) ex;
-            if (expression.values().isEmpty()) {
-                throw new LispError("Empty expression");
-            }
-
-            LispItem firstItem = expression.values().car();
-
-            if (firstItem instanceof LispIdentifier) {
-                String operator = ((LispIdentifier) firstItem).toString();
-
-                if (isArithmeticOperator(operator)) {
-                    return evaluateArithmeticExpression(expression);
-                }
-            }
-
-            throw new LispError("Unsupported operator: " + firstItem);
-        }
-
-        return ex;
-    }
 
 	/**
      * Parse a given string and turn it into LispItems.
@@ -136,7 +112,6 @@ public class LispImpl implements Lisp {
 			consumeChar('(');
 			skipWhiteSpace();
 			int inputLen = input.length();
-			int inputIndex = index;
 
 			while (index < inputLen && input.charAt(index) != ')') {
 				LispItem item = parse();
@@ -148,9 +123,6 @@ public class LispImpl implements Lisp {
 			if (expression.toString().matches("\\([<>]\\)")) {
 				throw new LispError("match --> " + expression.toString());
 			}
-			
-			// empty or misformed expr
-//			if (index == inputIndex ) {}
 			
 			if (index == inputLen 
 					|| input.charAt(index) != ')') {
@@ -209,7 +181,6 @@ public class LispImpl implements Lisp {
 
 		    return new LispIdentifier(lispId);
 		}
-
 		
 		private boolean isOperator(char op) {
             String operatorsRegex = "[+\\-*/<>]";
@@ -230,9 +201,40 @@ public class LispImpl implements Lisp {
 		}
 	}
 	
-	/*
-	 * Helpers to evaluate a parsed LispItem
-	 */
+	@Override
+	public LispItem evaluate(LispItem ex) throws LispError {
+	    if (ex instanceof LispBoolean) {
+	        return ex;
+	    } else if (ex instanceof LispIdentifier) {
+	        return evaluateIdentifier((LispIdentifier) ex);
+	    } else if (ex instanceof LispExpression) {
+	        return evaluateExpression((LispExpression) ex);
+	    } else {
+	        throw new LispError("Unsupported LispItem");
+	    }
+	}
+	
+	private LispItem evaluateExpression(LispExpression expression) throws LispError {
+	    if (expression.isEmpty()) {
+	        throw new LispError("Empty expression");
+	    }
+
+	    LispItem operatorItem = expression.values().car();
+
+	    if (operatorItem instanceof LispIdentifier) {
+	        String operator = ((LispIdentifier) operatorItem).toString();
+
+	        if (isBooleanOperator(operator)) {
+	            return evaluateBooleanExpression(expression);
+	        } else if (isArithmeticOperator(operator)) {
+	            return evaluateArithmeticExpression(expression);
+	        } else {
+	            throw new LispError("Unsupported operator: " + operator);
+	        }
+	    } else {
+	        throw new LispError("Invalid expression, operator expected");
+	    }
+	}
 	
 	private boolean isBooleanOperator(String operator) {
 	    return operator.matches("and|or|not");
@@ -243,19 +245,6 @@ public class LispImpl implements Lisp {
     }
 	
 	private LispItem evaluateIdentifier(LispIdentifier identifier) throws LispError {
-	    String id = identifier.toString();
-
-	    switch (id) {
-	        case "true":
-	            return LispBoolean.TRUE;
-	        case "false":
-	            return LispBoolean.FALSE;
-	        default:
-	            throw new LispError("Undefined identifier: " + id);
-	    }
-	}
-	
-	private LispBoolean evaluateIdentifierExpression(LispExpression expression) throws LispError {
 		throw new UnsupportedOperationException("Not implemented yet");
 	}
 	
@@ -265,38 +254,68 @@ public class LispImpl implements Lisp {
 	 * @return a {@link LispBoolean}
 	 * @throws LispError
 	 */
-	private LispBoolean evaluateBooleanExpression(LispExpression expression) throws LispError {
-	    if (expression.values().size() < 3) {
-	        throw new LispError("Boolean expressions must have at least two operands");
+	private LispItem evaluateBooleanExpression(LispExpression expression) throws LispError {
+	    if (expression.isEmpty()) {
+	        return LispBoolean.FALSE;
 	    }
 
 	    LispItem operatorItem = expression.values().car();
 	    String operator = ((LispIdentifier) operatorItem).toString();
 
-	    if (!isBooleanOperator(operator)) {
-	        throw new LispError("Unsupported boolean operator: " + operator);
-	    }
-
-	    LispItem operand1Item = expression.nth(1);
-	    LispItem operand2Item = expression.nth(2);
-
-	    if (!(operand1Item instanceof LispBoolean) || !(operand2Item instanceof LispBoolean)) {
-	        throw new LispError("Operands of boolean expressions must be booleans");
-	    }
-
-	    boolean operand1 = ((LispBoolean) operand1Item).value();
-	    boolean operand2 = ((LispBoolean) operand2Item).value();
-
 	    switch (operator) {
 	        case "and":
-	            return LispBoolean.valueOf(operand1 && operand2);
+	            return evaluateAnd(expression);
 	        case "or":
-	            return LispBoolean.valueOf(operand1 || operand2);
+	            return evaluateOr(expression);
 	        case "not":
-	            return LispBoolean.valueOf(!operand1);
+	            return evaluateNot(expression);
 	        default:
 	            throw new LispError("Unsupported boolean operator: " + operator);
 	    }
+	}
+
+	private LispItem evaluateAnd(LispExpression expression) throws LispError {
+	    boolean result = true;
+
+	    for (int i = 1; i < expression.values().size(); i++) {
+	        LispItem operandItem = expression.nth(i);
+	        if (!(operandItem instanceof LispBoolean)) {
+	            throw new LispError("Operands of 'and' must be booleans");
+	        }
+	        boolean operand = ((LispBoolean) operandItem).value();
+	        result = result && operand;
+	    }
+
+	    return LispBoolean.valueOf(result);
+	}
+
+	private LispItem evaluateOr(LispExpression expression) throws LispError {
+	    boolean result = false;
+
+	    for (int i = 1; i < expression.values().size(); i++) {
+	        LispItem operandItem = expression.nth(i);
+	        if (!(operandItem instanceof LispBoolean)) {
+	            throw new LispError("Operands of 'or' must be booleans");
+	        }
+	        boolean operand = ((LispBoolean) operandItem).value();
+	        result = result || operand;
+	    }
+
+	    return LispBoolean.valueOf(result);
+	}
+
+	private LispItem evaluateNot(LispExpression expression) throws LispError {
+	    if (expression.values().size() != 2) {
+	        throw new LispError("Invalid number of operands");
+	    }
+
+	    LispItem operandItem = expression.nth(1);
+	    if (!(operandItem instanceof LispBoolean)) {
+	        throw new LispError("Operand of 'not' must be a boolean");
+	    }
+	    boolean operand = ((LispBoolean) operandItem).value();
+
+	    return LispBoolean.valueOf(!operand);
 	}
 
 	/**
@@ -306,16 +325,6 @@ public class LispImpl implements Lisp {
 	 * @throws LispError
 	 */
 	private LispItem evaluateArithmeticExpression(LispExpression expression) throws LispError {
-		throw new UnsupportedOperationException("Not implemented yet");
-	}
-	
-	/**
-	 * Evaluate an expression of {@link LispItem}
-	 * @param expression
-	 * @return a {@link LispItem}
-	 * @throws LispError
-	 */
-	private LispItem evaluateExpression(LispExpression expression) throws LispError {
 		throw new UnsupportedOperationException("Not implemented yet");
 	}
 }
