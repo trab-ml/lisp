@@ -40,4 +40,11 @@ public class LispNumber implements LispItem {
 	public double doubleValue() {
 		return  this.value().doubleValue();
 	}
+	
+	public int compareTo(LispNumber nb) {
+		double thisLispNumber = doubleValue();
+		double otherLispNumber = nb.doubleValue();
+		return (int) (thisLispNumber - otherLispNumber);
+	}
+	
 }

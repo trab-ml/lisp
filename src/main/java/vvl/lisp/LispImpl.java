@@ -2,6 +2,7 @@ package vvl.lisp;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -242,11 +243,26 @@ public class LispImpl implements Lisp {
 	}
 	
 	private LispItem evaluateComparisonExpression(LispExpression expression) throws LispError {
+		LispItem operatorItem = expression.values().car();
+		String operator = ((LispIdentifier) operatorItem).toString();
 		if (expression.values().size() < 2) {
 			throw new LispError("Invalid number of operands");
 		}
-
-		throw new UnsupportedOperationException("Not implemented yet");
+		
+		switch (operator) {
+		case "=":
+			return compareEqualsTo(expression);
+		case "<=":
+			return compareLessThanOrEqual(expression);
+		case "<":
+			return compareLessThan(expression);
+		case ">=":
+			return compareGreaterThanOrEqual(expression);
+		case ">":
+			return compareGreaterThan(expression);
+		default:
+			throw new LispError("Unsupported comparason operator " + operator);
+		}
 	}
 	
 	/**
@@ -261,6 +277,14 @@ public class LispImpl implements Lisp {
 	}
 
 	/* helpers */
+//	TODO
+//	+ Make such as op work:
+//		Given a lisp interpreter
+//		When the expression entered is (<= 3.0 2.0)
+//		Then the result should be #f (FAILED)
+//		  (java.lang.AssertionError: 
+//		  Expected: "#f"
+//		       but: was "#t")
 	
 	private boolean isBooleanOperator(String operator) {
 		return operator.matches("and|or|not");
@@ -273,9 +297,16 @@ public class LispImpl implements Lisp {
 	private boolean isArithmeticOperator(String operator) {
 		return operator.matches("[+\\-*/]");
 	}
+	
+	private LispNumber getNumericValue(LispItem item) throws LispError {
+	    if (!(item instanceof LispNumber)) {
+	        return (LispNumber) evaluateArithmeticExpression((LispExpression) item);
+	    }
+	    return (LispNumber) item;
+	}
 
 	/**
-	 * Evaluate an expression of {@link LispExpression}
+	 * Evaluate an expression {@link LispExpression}
 	 * 
 	 * @param expression
 	 * @return a {@link LispBoolean}
@@ -347,84 +378,73 @@ public class LispImpl implements Lisp {
 		return LispBoolean.valueOf(!operand);
 	}
 
-	private LispBoolean compareLispNumbers(LispExpression expression) throws LispError {
-		if (expression.values().size() < 3) {
-			throw new LispError("Invalid number of operands");
+	private LispBoolean compareEqualsTo(LispExpression expression) throws LispError {
+	    LispNumber firstOperand = getNumericValue(expression.nth(1));
+	    LispNumber operand;
+		int i;
+		for (i = 2; i < expression.values().size(); i++) {
+			operand = getNumericValue(expression.nth(i));
+	        if (!firstOperand.equals(operand)) {
+	            return LispBoolean.valueOf(false);
+	        }
 		}
 
-		LispItem operandItem1 = expression.nth(1);
-		LispItem operandItem2 = expression.nth(2);
-		if (!(operandItem1 instanceof LispNumber) || !(operandItem2 instanceof LispNumber)) {
-			throw new LispError("Operand of '=' must be a number");
-		}
-		Number operand1 = ((LispNumber) operandItem1).doubleValue();
-		Number operand2 = ((LispNumber) operandItem2).doubleValue();
-
-		return LispBoolean.valueOf(operand1 == operand2);
+		return LispBoolean.valueOf(true);
 	}
-
+	
 	private LispBoolean compareLessThan(LispExpression expression) throws LispError {
-		if (expression.values().size() != 3) {
-			throw new LispError("Invalid number of operands");
-		}
+		LispNumber previousOperand = getNumericValue(expression.nth(1));
+		LispNumber currentOperand;
+	    for (int i = 2; i < expression.values().size(); i++) {
+	        currentOperand = getNumericValue(expression.nth(i));
+	        if (!(previousOperand.compareTo(currentOperand) < 0)) {
+	            return LispBoolean.valueOf(false);
+	        }
+	        previousOperand = currentOperand;
+	    }
 
-		LispItem operandItem1 = expression.nth(1);
-		LispItem operandItem2 = expression.nth(2);
-		if (!(operandItem1 instanceof LispNumber) || !(operandItem2 instanceof LispNumber)) {
-			throw new LispError("Operands of < must be numbers");
-		}
-		double operand1 = ((LispNumber) operandItem1).doubleValue();
-		double operand2 = ((LispNumber) operandItem2).doubleValue();
-
-		return LispBoolean.valueOf(operand1 < operand2);
+	    return LispBoolean.valueOf(true);
 	}
 
 	private LispBoolean compareLessThanOrEqual(LispExpression expression) throws LispError {
-		if (expression.values().size() != 3) {
-			throw new LispError("Invalid number of operands");
-		}
+		LispNumber previousOperand = getNumericValue(expression.nth(1));
 
-		LispItem operandItem1 = expression.nth(1);
-		LispItem operandItem2 = expression.nth(2);
-		if (!(operandItem1 instanceof LispNumber) || !(operandItem2 instanceof LispNumber)) {
-			throw new LispError("Operands of <= must be numbers");
-		}
-		double operand1 = ((LispNumber) operandItem1).doubleValue();
-		double operand2 = ((LispNumber) operandItem2).doubleValue();
+	    for (int i = 2; i < expression.values().size(); i++) {
+	        LispNumber currentOperand = getNumericValue(expression.nth(i));
+	        if (!(previousOperand.compareTo(currentOperand) <= 0)) {
+	            return LispBoolean.valueOf(false);
+	        }
+	        previousOperand = currentOperand;
+	    }
 
-//		System.out.println("(op oprd oprd) --> " + operand1 + operand1);
-		return LispBoolean.valueOf(operand1 <= operand2);
+	    return LispBoolean.valueOf(true);
 	}
 
 	private LispBoolean compareGreaterThan(LispExpression expression) throws LispError {
-		if (expression.values().size() != 3) {
-			throw new LispError("Invalid number of operands");
-		}
+		LispNumber previousOperand = getNumericValue(expression.nth(1));
 
-		LispItem operandItem1 = expression.nth(1);
-		LispItem operandItem2 = expression.nth(2);
-		if (!(operandItem1 instanceof LispNumber) || !(operandItem2 instanceof LispNumber)) {
-			throw new LispError("Operands of > must be numbers");
-		}
-		double operand1 = ((LispNumber) operandItem1).doubleValue();
-		double operand2 = ((LispNumber) operandItem2).doubleValue();
+	    for (int i = 2; i < expression.values().size(); i++) {
+	        LispNumber currentOperand = getNumericValue(expression.nth(i));
+	        if (!(previousOperand.compareTo(currentOperand) > 0)) {
+	            return LispBoolean.valueOf(false);
+	        }
+	        previousOperand = currentOperand;
+	    }
 
-		return LispBoolean.valueOf(operand1 > operand2);
+	    return LispBoolean.valueOf(true);
 	}
 
 	private LispBoolean compareGreaterThanOrEqual(LispExpression expression) throws LispError {
-		if (expression.values().size() != 3) {
-			throw new LispError("Invalid number of operands for");
-		}
+		LispNumber previousOperand = getNumericValue(expression.nth(1));
 
-		LispItem operandItem1 = expression.nth(1);
-		LispItem operandItem2 = expression.nth(2);
-		if (!(operandItem1 instanceof LispNumber) || !(operandItem2 instanceof LispNumber)) {
-			throw new LispError("Operands of >= must be numbers");
-		}
-		double operand1 = ((LispNumber) operandItem1).doubleValue();
-		double operand2 = ((LispNumber) operandItem2).doubleValue();
+	    for (int i = 2; i < expression.values().size(); i++) {
+	        LispNumber currentOperand = getNumericValue(expression.nth(i));
+	        if (!(previousOperand.compareTo(currentOperand) >= 0)) {
+	            return LispBoolean.valueOf(false);
+	        }
+	        previousOperand = currentOperand;
+	    }
 
-		return LispBoolean.valueOf(operand1 >= operand2);
+	    return LispBoolean.valueOf(true);
 	}
 }
