@@ -269,6 +269,16 @@ public class LispImpl implements Lisp {
 	            return evaluateOr(expression);
 	        case "not":
 	            return evaluateNot(expression);
+	        case "=":
+	            return compareLispNumbers(expression);
+	        case "<":
+	            return compareLessThan(expression);
+	        case "<=":
+	            return compareLessThanOrEqual(expression);
+	        case ">":
+	            return compareGreaterThan(expression);
+	        case ">=":
+	            return compareGreaterThanOrEqual(expression);
 	        default:
 	            throw new LispError("Unsupported boolean operator: " + operator);
 	    }
@@ -316,6 +326,50 @@ public class LispImpl implements Lisp {
 	    boolean operand = ((LispBoolean) operandItem).value();
 
 	    return LispBoolean.valueOf(!operand);
+	}
+	
+	private LispItem compareLispNumbers(LispExpression expression) throws LispError {
+	    if (expression.values().size() < 3) {
+	        throw new LispError("Invalid number of operands");
+	    }
+
+	    LispItem operandItem1 = expression.nth(1);
+	    LispItem operandItem2 = expression.nth(2);
+	    if (!(operandItem1 instanceof LispNumber) || !(operandItem2 instanceof LispNumber)) {
+	        throw new LispError("Operand of '=' must be a number");
+	    }
+	    Number operand1 = ((LispNumber) operandItem1).doubleValue();
+	    Number operand2 = ((LispNumber) operandItem2).doubleValue();
+
+	    return LispBoolean.valueOf(operand1 == operand2);
+	}
+	
+	private LispItem compareLessThan(LispExpression expression) throws LispError {
+	    if (expression.values().size() != 3) {
+	        throw new LispError("Invalid number of operands for <");
+	    }
+
+	    LispItem operandItem1 = expression.nth(1);
+	    LispItem operandItem2 = expression.nth(2);
+	    if (!(operandItem1 instanceof LispNumber) || !(operandItem2 instanceof LispNumber)) {
+	        throw new LispError("Operands of < must be numbers");
+	    }
+	    double operand1 = ((LispNumber) operandItem1).doubleValue();
+	    double operand2 = ((LispNumber) operandItem2).doubleValue();
+
+	    return LispBoolean.valueOf(operand1 < operand2);
+	}
+	
+	private LispItem compareLessThanOrEqual(LispExpression expression) throws LispError {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
+
+	private LispItem compareGreaterThan(LispExpression expression) throws LispError {
+		throw new UnsupportedOperationException("Not implemented yet");
+	}
+
+	private LispItem compareGreaterThanOrEqual(LispExpression expression) throws LispError {
+		throw new UnsupportedOperationException("Not implemented yet");
 	}
 
 	/**
