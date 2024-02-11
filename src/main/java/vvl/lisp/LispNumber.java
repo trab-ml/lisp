@@ -56,7 +56,8 @@ public class LispNumber implements LispItem {
 	public int compareTo(LispNumber nb) {
 		BigDecimal thisLispNumber = bigDecimalValue();
 		BigDecimal otherLispNumber = nb.bigDecimalValue();
-		return thisLispNumber.compareTo(otherLispNumber);
+		int result = thisLispNumber.compareTo(otherLispNumber);
+		return result;
 	}
 
 	/* helpers functions for arithmetic operations */
@@ -92,9 +93,6 @@ public class LispNumber implements LispItem {
 
 	public LispNumber divide(LispNumber operand) {
 		if (isInteger() && operand.isInteger()) {
-			if (operand.value().intValue() == 0) {
-				throw new ArithmeticException("Division by zero");
-			}
 			int result = value().intValue() / operand.value().intValue();
 			return new LispNumber(result);
 		} else {
