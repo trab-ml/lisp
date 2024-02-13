@@ -3,6 +3,8 @@ package vvl.lisp;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A number (either an integer or a real number).
@@ -54,54 +56,51 @@ public class LispNumber implements LispItem {
 	}
 
 	public int compareTo(LispNumber nb) {
-		BigDecimal thisLispNumber = bigDecimalValue();
-		BigDecimal otherLispNumber = nb.bigDecimalValue();
-		int result = thisLispNumber.compareTo(otherLispNumber);
-		return result;
+		return bigDecimalValue().compareTo(nb.bigDecimalValue());
 	}
 
-	/* helpers functions for arithmetic operations */
+	public static BigDecimal setScale(BigDecimal bd) {
+	    int scale = bd.scale();
+	    if (bd.stripTrailingZeros().scale() != bd.scale()) {
+	        scale = bd.stripTrailingZeros().scale();
+	    }
+	    scale = Math.max(scale, 1);
+	    return bd.setScale(scale, RoundingMode.HALF_UP);
+	}   
 	public LispNumber add(LispNumber operand) {
 		if (isInteger() && operand.isInteger()) {
 			int result = value().intValue() + operand.value().intValue();
 			return new LispNumber(result);
-		} else {
-			BigDecimal result = bigDecimalValue().add(operand.bigDecimalValue());
-			return new LispNumber(result.setScale(1, RoundingMode.HALF_UP));
 		}
+		BigDecimal result = bigDecimalValue().add(operand.bigDecimalValue());
+		return new LispNumber(result);
 	}
 
 	public LispNumber subtract(LispNumber operand) {
 		if (isInteger() && operand.isInteger()) {
 			int result = value().intValue() - operand.value().intValue();
 			return new LispNumber(result);
-		} else {
-			BigDecimal result = bigDecimalValue().subtract(operand.bigDecimalValue());
-			return new LispNumber(result.setScale(1, RoundingMode.HALF_UP));
 		}
+		BigDecimal result = bigDecimalValue().subtract(operand.bigDecimalValue());
+		return new LispNumber(result);
 	}
 
 	public LispNumber multiply(LispNumber operand) {
 		if (isInteger() && operand.isInteger()) {
 			int result = value().intValue() * operand.value().intValue();
 			return new LispNumber(result);
-		} else {
-			BigDecimal result = bigDecimalValue().multiply(operand.bigDecimalValue());
-			return new LispNumber(result.setScale(1, RoundingMode.HALF_UP));
 		}
+		BigDecimal result = bigDecimalValue().multiply(operand.bigDecimalValue());
+		return new LispNumber(setScale(result));
 	}
 
-	public LispNumber divide(LispNumber operand) {
+	public LispNumber divide(LispNumber operand) throws ArithmeticException {		
 		if (isInteger() && operand.isInteger()) {
 			int result = value().intValue() / operand.value().intValue();
 			return new LispNumber(result);
-		} else {
-			if (operand.compareTo(new LispNumber(BigInteger.ZERO)) == 0) {
-				throw new ArithmeticException("Division by zero");
-			}
-			BigDecimal result = bigDecimalValue().divide(operand.bigDecimalValue());
-			return new LispNumber(result.setScale(1, RoundingMode.HALF_UP));
 		}
+		BigDecimal result = bigDecimalValue().divide(operand.bigDecimalValue());
+		return new LispNumber(setScale(result));
 	}
 
 	private boolean isInteger() {
