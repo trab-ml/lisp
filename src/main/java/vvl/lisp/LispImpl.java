@@ -61,7 +61,7 @@ public class LispImpl implements Lisp {
 				throw new LispError("Unauthorized expression");
 			}
 			
-			Matcher matcher = Pattern.compile("^\\-\\d+ ").matcher(input.substring(index));
+			Matcher matcher = Pattern.compile("^\\-\\d+(\\.\\d+)?([eE]\\-?\\d+)? ").matcher(input.substring(index));
 			if (matcher.find()) {
 				throw new LispError("- should be a lisp operator");
 			}
