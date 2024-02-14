@@ -54,6 +54,14 @@ public class LispNumber implements LispItem {
 			return new BigDecimal(element.toString());
 		}
 	}
+	
+	public BigInteger bigIntegerValue() {
+		if (element instanceof BigInteger) {
+			return (BigInteger) element;
+		} else {
+			return new BigInteger(element.toString());
+		}
+	}
 
 	public int compareTo(LispNumber nb) {
 		return bigDecimalValue().compareTo(nb.bigDecimalValue());
@@ -66,10 +74,11 @@ public class LispNumber implements LispItem {
 	    }
 	    scale = Math.max(scale, 1);
 	    return bd.setScale(scale, RoundingMode.HALF_UP);
-	}   
+	}
+	
 	public LispNumber add(LispNumber operand) {
 		if (isInteger() && operand.isInteger()) {
-			int result = value().intValue() + operand.value().intValue();
+			BigInteger result = (this.bigIntegerValue()).add(operand.bigIntegerValue());
 			return new LispNumber(result);
 		}
 		BigDecimal result = bigDecimalValue().add(operand.bigDecimalValue());
@@ -78,7 +87,7 @@ public class LispNumber implements LispItem {
 
 	public LispNumber subtract(LispNumber operand) {
 		if (isInteger() && operand.isInteger()) {
-			int result = value().intValue() - operand.value().intValue();
+			BigInteger result = (this.bigIntegerValue()).subtract(operand.bigIntegerValue());
 			return new LispNumber(result);
 		}
 		BigDecimal result = bigDecimalValue().subtract(operand.bigDecimalValue());
@@ -87,7 +96,7 @@ public class LispNumber implements LispItem {
 
 	public LispNumber multiply(LispNumber operand) {
 		if (isInteger() && operand.isInteger()) {
-			int result = value().intValue() * operand.value().intValue();
+			BigInteger result = (this.bigIntegerValue()).multiply(operand.bigIntegerValue());
 			return new LispNumber(result);
 		}
 		BigDecimal result = bigDecimalValue().multiply(operand.bigDecimalValue());
@@ -96,7 +105,7 @@ public class LispNumber implements LispItem {
 
 	public LispNumber divide(LispNumber operand) throws ArithmeticException {		
 		if (isInteger() && operand.isInteger()) {
-			int result = value().intValue() / operand.value().intValue();
+			BigInteger result = (this.bigIntegerValue()).divide(operand.bigIntegerValue());
 			return new LispNumber(result);
 		}
 		BigDecimal result = bigDecimalValue().divide(operand.bigDecimalValue());
