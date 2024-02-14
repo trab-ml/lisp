@@ -148,6 +148,11 @@ public class LispImpl implements Lisp {
 			}
 
 			String lispNumStr = numStr.toString();
+			Matcher matcher = Pattern.compile("^\\-\\d+ ").matcher(lispNumStr);
+			if(matcher.find()) {
+				throw new LispError("- should be a lisp operator");
+			}
+					
 			if (lispNumStr.contains(".")) { // potential double!
 				return new LispNumber(Double.valueOf(lispNumStr));
 			}
