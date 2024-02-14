@@ -148,11 +148,6 @@ public class LispImpl implements Lisp {
 			}
 
 			String lispNumStr = numStr.toString();
-			Matcher matcher = Pattern.compile("^\\-\\d+ ").matcher(lispNumStr);
-			if(matcher.find()) {
-				throw new LispError("- should be a lisp operator");
-			}
-					
 			if (lispNumStr.contains(".")) { // potential double!
 				return new LispNumber(Double.valueOf(lispNumStr));
 			}
@@ -182,6 +177,11 @@ public class LispImpl implements Lisp {
 
 			if (index < inputLen && input.charAt(index) == ')' && !inputSubstring.contains("(")) {
 				throw new LispError("No opening parenthesis!");
+			}
+			
+			matcher = Pattern.compile("^\\-\\d+ ").matcher(lispId);
+			if(matcher.find()) {
+				throw new LispError("- should be a lisp operator");
 			}
 
 			return new LispIdentifier(lispId);
