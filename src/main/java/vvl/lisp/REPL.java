@@ -31,7 +31,6 @@ public class REPL {
                 }
                 try {
                     System.out.println(lisp.eval(line));
-//                	System.out.println(lisp.parse(line));
                 } catch (LispError le) {
                     System.out.println("Error: " + le.getMessage());
                 }

@@ -10,22 +10,18 @@ public class LispImpl implements Lisp {
 
 	@Override
 	public LispItem parse(String expr) throws LispError {
-		try {
-			LispParser parser = new LispParser(expr);
-			LispItem parsed = parser.parse();
+		LispParser parser = new LispParser(expr);
+		LispItem parsed = parser.parse();
 
-			while (!parser.isInputEmpty()) {
-				parsed = parser.parse();
-			}
-
-			if (parser.getParsedLispItems().size() == 2) {
-				throw new LispError("Unexpected data after parsing complete!");
-			}
-
-			return parsed;
-		} catch (Exception e) {
-			throw new LispError("Invalid number of operands");
+		while (!parser.isInputEmpty()) {
+			parsed = parser.parse();
 		}
+
+		if (parser.getParsedLispItems().size() == 2) {
+			throw new LispError("Unexpected data after parsing complete!");
+		}
+
+		return parsed;
 	}
 
 	/**
@@ -64,7 +60,12 @@ public class LispImpl implements Lisp {
 			if (index >= input.length()) {
 				throw new LispError("Unauthorized expression");
 			}
-
+			
+			Matcher matcher = Pattern.compile("^\\-\\d+ ").matcher(input.substring(index));
+			if (matcher.find()) {
+				throw new LispError("- should be a lisp operator");
+			}
+						
 			char firstChar = input.charAt(index);
 			LispItem result;
 
@@ -120,9 +121,10 @@ public class LispImpl implements Lisp {
 					expression.append(item);
 				skipWhiteSpace();
 			}
-
-			if (expression.toString().matches("\\([<>]\\)")) {
-				throw new LispError("match --> " + expression.toString());
+			
+			String expr = expression.toString();
+			if (expr.matches("\\([<>]\\)") || expr.matches("(<)|(<=)|(>)|(>=)|(=)")) {
+				throw new LispError("Invalid number of operands");
 			}
 
 			if (index == inputLen || input.charAt(index) != ')') {
@@ -147,7 +149,7 @@ public class LispImpl implements Lisp {
 				currentChar = input.charAt(index);
 			}
 
-			String lispNumStr = numStr.toString();
+			String lispNumStr = numStr.toString();			
 			if (lispNumStr.contains(".")) { // potential double!
 				return new LispNumber(Double.valueOf(lispNumStr));
 			}
@@ -177,11 +179,6 @@ public class LispImpl implements Lisp {
 
 			if (index < inputLen && input.charAt(index) == ')' && !inputSubstring.contains("(")) {
 				throw new LispError("No opening parenthesis!");
-			}
-			
-			matcher = Pattern.compile("^\\-\\d+ ").matcher(lispId);
-			if(matcher.find()) {
-				throw new LispError("- should be a lisp operator");
 			}
 
 			return new LispIdentifier(lispId);
@@ -228,10 +225,11 @@ public class LispImpl implements Lisp {
 			throw new LispError("Empty expression");
 		}
 		if (expression.values().size() == 1) {
-			if (expression.toString().equals("(+)")) {
+			String carVal = expression.toString();
+			if (carVal.equals("(+)")) {
 				return new LispNumber(0);
 			}
-			if (expression.toString().equals("(*)")) {
+			else if (carVal.equals("(*)")) {
 				return new LispNumber(1);
 			}
 		}
