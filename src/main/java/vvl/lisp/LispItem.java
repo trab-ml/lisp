@@ -6,6 +6,4 @@ package vvl.lisp;
  * @author leberre
  *
  */
-public interface LispItem {
-
-}
+public interface LispItem {}
