@@ -484,6 +484,10 @@ public class LispImpl implements Lisp {
 	private LispNumber getNumericValue(LispItem item) throws LispError {
 		if (!(item instanceof LispNumber)) {
 			if (!(item instanceof LispExpression)) {
+				if (item instanceof LispIdentifier) {
+					String id = ((LispIdentifier) item).toString();
+					throw new LispError(id.charAt(0) + " should be a lisp operator");
+				}
 				throw new LispError("Not a number");
 			}
 			return (LispNumber) evaluateArithmeticExpression((LispExpression) item);
