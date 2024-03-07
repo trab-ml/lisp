@@ -223,6 +223,13 @@ public class LispImpl implements Lisp {
 		return identifier;
 	}
 
+	/**
+	 * Evaluate a parsed expression {@link LispExpression}
+	 * 
+	 * @param a {@link LispExpression}
+	 * @return a {@link LispItem}
+	 * @throws LispError
+	 */
 	private LispItem evaluateExpression(LispExpression expression) throws LispError {
 		int expressionSize = expression.values().size();
 		if (expression.isEmpty()) {
@@ -306,13 +313,6 @@ public class LispImpl implements Lisp {
 		}
 	}
 
-	/**
-	 * Evaluate an expression of {@link LispExpression}
-	 * 
-	 * @param expression
-	 * @return a {@link LispNumber}
-	 * @throws LispError
-	 */
 	private LispNumber evaluateArithmeticExpression(LispExpression expression) throws LispError {
 		Iterator<LispItem> it = expression.values().iterator();
 		String operator = ((LispIdentifier) it.next()).toString();
@@ -350,7 +350,6 @@ public class LispImpl implements Lisp {
 				throw new LispError("Unsupported arithmetic operator: " + operator);
 			}
 		}
-
 		return result;
 	}
 
@@ -393,7 +392,6 @@ public class LispImpl implements Lisp {
 		if (!operand) {
 			result = it.next();
 		}
-
 		if (result instanceof LispExpression) {
 			result = evaluateExpression((LispExpression) result);
 		}
@@ -469,7 +467,7 @@ public class LispImpl implements Lisp {
 		return new LispExpression();
 	}
 
-	/* helpers */
+	/* helpers functions */
 
 	private boolean isBooleanOperator(String operator) {
 		return operator.matches("and|or|not");
@@ -524,13 +522,6 @@ public class LispImpl implements Lisp {
 		}
 	}
 
-	/**
-	 * Evaluate an expression {@link LispExpression}
-	 * 
-	 * @param expression
-	 * @return a {@link LispBoolean}
-	 * @throws LispError
-	 */
 	private LispBoolean evaluateBooleanExpression(LispExpression expression) throws LispError {
 		LispItem operatorItem = expression.values().car();
 		String operator = ((LispIdentifier) operatorItem).toString();
