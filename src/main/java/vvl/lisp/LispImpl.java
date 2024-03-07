@@ -229,50 +229,55 @@ public class LispImpl implements Lisp {
 			return expression;
 		} else if (expressionSize == 1) {
 			String carVal = expression.toString();
-			if (carVal.equals("(nil)")) {
+			
+			switch (carVal) {
+			case "(nil)":
 				throw new LispError("nil is not a valid operator");
-			} else if (carVal.equals("(+)")) {
+			case "(+)":
 				return new LispNumber(0);
-			} else if (carVal.equals("(*)")) {
+			case "(*)":
 				return new LispNumber(1);
-			} else if (carVal.equals("(/)") || carVal.equals("(-)")) {
-				throw new LispError("Invalid number of operands");
+			case "(/)":
+			case "(-)":
+				throw new LispError("Invalid number of operands");				
 			}
 		}
 
 		LispItem operatorItem = expression.values().car();
 		if (operatorItem instanceof LispIdentifier) {
+			LispItem evaluatedExpr;
 			String operator = ((LispIdentifier) operatorItem).toString();
 			if (isBooleanOperator(operator)) {
-				return evaluateBooleanExpression(expression);
+				evaluatedExpr = evaluateBooleanExpression(expression);
 			} else if (isComparisonOperator(operator)) {
-				return evaluateComparisonExpression(expression);
+				evaluatedExpr = evaluateComparisonExpression(expression);
 			} else if (isArithmeticOperator(operator)) {
-				return evaluateArithmeticExpression(expression);
+				evaluatedExpr = evaluateArithmeticExpression(expression);
 			} else if (operator.equals("cons")) {
 				if (expressionSize < 3) {
 					throw new LispError("Invalid number of operands");
 				}
-				return evaluateConsExpression(expression);
+				evaluatedExpr = evaluateConsExpression(expression);
 			} else if (operator.equals("quote")) {
 				if (expressionSize != 2) {
 					throw new LispError("Invalid number of operands");
 				}
-				return evaluateQuoteExpression(expression);
+				evaluatedExpr = evaluateQuoteExpression(expression);
 			} else if (operator.equals("list")) {
-				return evaluateListExpression(expression);
+				evaluatedExpr = evaluateListExpression(expression);
 			} else if (operator.equals("if")) {
 				if (expressionSize != 4) {
 					throw new LispError("Invalid number of operands");
 				}
-				return evaluateIfExpression(expression);
+				evaluatedExpr = evaluateIfExpression(expression);
 			} else if (operator.equals("car")) {
-				return evaluateCarExpression(expression);
+				evaluatedExpr = evaluateCarExpression(expression);
 			} else if (operator.equals("cdr")) {
-				return evaluateCdrExpression(expression);
+				evaluatedExpr = evaluateCdrExpression(expression);
 			} else {
 				throw new LispError("Unsupported operator: " + operator);
 			}
+			return evaluatedExpr;
 		} else {
 			throw new LispError("Invalid expression -> " + expression.toString());
 		}
@@ -384,9 +389,9 @@ public class LispImpl implements Lisp {
 		Iterator<LispItem> it = expression.values().iterator();
 		it.next();
 		boolean operand = getBooleanValue(it.next()).value();
-		LispItem result = it.next(); // operand1
+		LispItem result = it.next();
 		if (!operand) {
-			result = it.next(); // operand2
+			result = it.next();
 		}
 
 		if (result instanceof LispExpression) {
@@ -410,17 +415,6 @@ public class LispImpl implements Lisp {
 		return result;
 	}
 
-	private LispExpression processCarOrCdrExpression(LispExpression expression) throws LispError {
-		String operator = ((LispIdentifier) expression.values().car()).toString();
-		if (operator.equals("cons")) {
-			return evaluateConsExpression(expression);
-		} else if (operator.equals("list")) {
-			return evaluateListExpression(expression);
-		} else {
-			throw new LispError("Not a Cons");
-		}
-	}
-
 	private LispItem evaluateCarExpression(LispExpression expression) throws LispError {
 		if (expression.values().size() != 2) {
 			throw new LispError("Invalid number of operands");
@@ -430,7 +424,7 @@ public class LispImpl implements Lisp {
 		it.next();
 		LispExpression remainingExpr = (LispExpression) it.next();
 		if (!remainingExpr.isEmpty()) {
-			return processCarOrCdrExpression(remainingExpr).values().car();
+			return processCarExpression(remainingExpr).values().car();
 		}
 		return new LispExpression();
 	}
@@ -458,7 +452,6 @@ public class LispImpl implements Lisp {
 				} else {
 					throw new LispError("Not a Cons");
 				}
-
 				LispItem nextItem = it.next();
 				if (nextItem instanceof LispExpression) {
 					return nextItem;
@@ -507,8 +500,6 @@ public class LispImpl implements Lisp {
 				throw new LispError("Not a Boolean");
 			}
 			return (LispBoolean) elt;
-
-//			return (LispBoolean) evaluateBooleanExpression((LispExpression) item);
 		}
 		return (LispBoolean) item;
 	}
@@ -521,6 +512,17 @@ public class LispImpl implements Lisp {
 		}
 		return item;
 	}
+	
+	private LispExpression processCarExpression(LispExpression expression) throws LispError {
+		String operator = ((LispIdentifier) expression.values().car()).toString();
+		if (operator.equals("cons")) {
+			return evaluateConsExpression(expression);
+		} else if (operator.equals("list")) {
+			return evaluateListExpression(expression);
+		} else {
+			throw new LispError("Not a Cons");
+		}
+	}
 
 	/**
 	 * Evaluate an expression {@link LispExpression}
@@ -532,7 +534,6 @@ public class LispImpl implements Lisp {
 	private LispBoolean evaluateBooleanExpression(LispExpression expression) throws LispError {
 		LispItem operatorItem = expression.values().car();
 		String operator = ((LispIdentifier) operatorItem).toString();
-
 		switch (operator) {
 		case "and":
 			return evaluateAnd(expression);
@@ -541,7 +542,6 @@ public class LispImpl implements Lisp {
 		case "not":
 			return evaluateNot(expression);
 		default:
-//			return evaluateExpression(expression);
 			throw new LispError("Unsupported boolean operator: " + operator);
 		}
 	}
@@ -550,16 +550,14 @@ public class LispImpl implements Lisp {
 		boolean result = true;
 		boolean operand;
 		Iterator<LispItem> it = expression.values().iterator();
-		it.next(); // skip the first element (the operator)
+		it.next();
 		while (it.hasNext()) {
 			operand = getBooleanValue(it.next()).value();
 			result = result && operand;
-
 			if (!result) {
 				break;
 			}
 		}
-
 		return LispBoolean.valueOf(result);
 	}
 
@@ -571,7 +569,6 @@ public class LispImpl implements Lisp {
 		while (it.hasNext()) {
 			operand = getBooleanValue(it.next()).value();
 			result = result || operand;
-
 			if (result) {
 				break;
 			}
@@ -583,8 +580,7 @@ public class LispImpl implements Lisp {
 		if (expression.values().size() != 2) {
 			throw new LispError("Invalid number of operands");
 		}
-		LispItem operandItem = expression.nth(1);
-		boolean operand = getBooleanValue(operandItem).value();
+		boolean operand = getBooleanValue(expression.nth(1)).value();
 		return LispBoolean.valueOf(!operand);
 	}
 
