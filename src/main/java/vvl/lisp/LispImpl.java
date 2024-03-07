@@ -222,7 +222,7 @@ public class LispImpl implements Lisp {
 		}
 		return identifier;
 	}
-
+	
 	/**
 	 * Evaluate a parsed expression {@link LispExpression}
 	 * 
@@ -236,7 +236,6 @@ public class LispImpl implements Lisp {
 			return expression;
 		} else if (expressionSize == 1) {
 			String carVal = expression.toString();
-			
 			switch (carVal) {
 			case "(nil)":
 				throw new LispError("nil is not a valid operator");
@@ -296,7 +295,6 @@ public class LispImpl implements Lisp {
 		if (expression.values().size() < 2) {
 			throw new LispError("Invalid number of operands");
 		}
-
 		switch (operator) {
 		case "=":
 			return compareEqualsTo(expression);
@@ -484,8 +482,8 @@ public class LispImpl implements Lisp {
 	private LispNumber getNumericValue(LispItem item) throws LispError {
 		if (!(item instanceof LispNumber)) {
 			if (!(item instanceof LispExpression)) {
-				if (item instanceof LispIdentifier) {
-					String id = ((LispIdentifier) item).toString();
+				String id = ((LispIdentifier) item).toString();
+				if (id.matches("[+\\-]+\\d+(\\.\\d+)?([eE]\\-?\\d+)?")) {
 					throw new LispError(id.charAt(0) + " should be a lisp operator");
 				}
 				throw new LispError("Not a number");
