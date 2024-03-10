@@ -2,12 +2,20 @@ package vvl.lisp;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class LispImpl implements Lisp {
 
+	Map<String, LispItem> globalVar = new HashMap<String,LispItem>();
+	Set<String> LISP_KEYWORDS = new HashSet<String>(Arrays.asList("or", "not", "and", "lambda", "define", "set!", "cons", "#t", "#f", "nil"));
+	
 	@Override
 	public LispItem parse(String expr) throws LispError {
 		LispParser parser = new LispParser(expr);
@@ -280,6 +288,11 @@ public class LispImpl implements Lisp {
 				evaluatedExpr = evaluateCarExpression(expression);
 			} else if (operator.equals("cdr")) {
 				evaluatedExpr = evaluateCdrExpression(expression);
+			} else if (operator.equals("define")) {
+				if (expressionSize != 3) {
+					throw new LispError("Invalid number of operands");
+				}
+				evaluatedExpr = evaluateDefineExpression(expression);
 			} else {
 				throw new LispError("Unsupported operator: " + operator);
 			}
@@ -393,6 +406,12 @@ public class LispImpl implements Lisp {
 		if (result instanceof LispExpression) {
 			result = evaluateExpression((LispExpression) result);
 		}
+		if (result instanceof LispIdentifier) {
+			String id = ((LispIdentifier) result).toString();
+			if (globalVar.containsKey(id)) {
+				return globalVar.get(id);
+			}
+		}
 		return result;
 	}
 
@@ -465,6 +484,26 @@ public class LispImpl implements Lisp {
 		return new LispExpression();
 	}
 
+	private LispItem evaluateDefineExpression(LispExpression expression) throws LispError {
+		Iterator<LispItem> it = expression.values().iterator();
+		it.next();
+		LispItem varId = it.next();
+		
+		if (!(varId instanceof LispIdentifier)) {
+			throw new LispError(varId.toString() + " is not a valid identifier");
+		}
+		String varName = varId.toString();
+
+//		not allowed: \ + * . ? [^\\+\\*\\.]
+		if(!varName.matches("[a-zA-Z]+\\w*") || isKeyword(varName) || globalVar.containsKey(varName)) {
+			throw new LispError(varName + " is not a valid identifier");
+		}
+		
+		LispItem varValue = it.next();
+		globalVar.put(varName, varValue);
+		return varValue;
+	}
+	
 	/* helpers functions */
 
 	private boolean isBooleanOperator(String operator) {
@@ -483,6 +522,9 @@ public class LispImpl implements Lisp {
 		if (!(item instanceof LispNumber)) {
 			if (!(item instanceof LispExpression)) {
 				String id = ((LispIdentifier) item).toString();
+				if (globalVar.containsKey(id)) {
+					return getNumericValue(globalVar.get(id));
+				}
 				if (id.matches("[+\\-]+\\d+(\\.\\d+)?([eE]\\-?\\d+)?")) {
 					throw new LispError(id.charAt(0) + " should be a lisp operator");
 				}
@@ -497,6 +539,12 @@ public class LispImpl implements Lisp {
 		if (!(item instanceof LispBoolean)) {
 			LispItem elt = evaluateExpression((LispExpression) item);
 			if (!(elt instanceof LispBoolean)) {
+				if (elt instanceof LispIdentifier) {
+					String id = ((LispIdentifier) item).toString();
+					if (globalVar.containsKey(id)) {
+						return getBooleanValue(globalVar.get(id));
+					}
+				}
 				throw new LispError("Not a Boolean");
 			}
 			return (LispBoolean) elt;
@@ -507,8 +555,14 @@ public class LispImpl implements Lisp {
 	private LispItem getConsExpressionItemValue(LispItem item) throws LispError {
 		if (item instanceof LispExpression) {
 			return evaluateExpression((LispExpression) item);
-		} else if (item instanceof LispIdentifier && ((LispIdentifier) item).equals("nil")) {
-			return new LispExpression();
+		} else if (item instanceof LispIdentifier) {
+			if (((LispIdentifier) item).equals("nil")) {
+				return new LispExpression();
+			}
+			String id = ((LispIdentifier) item).toString();
+			if (globalVar.containsKey(id)) {
+				return getConsExpressionItemValue(globalVar.get(id));
+			}
 		}
 		return item;
 	}
@@ -523,6 +577,11 @@ public class LispImpl implements Lisp {
 			throw new LispError("Not a Cons");
 		}
 	}
+	
+	private boolean isKeyword(String s) {
+		return LISP_KEYWORDS.contains(s);
+	}
+	
 
 	private LispBoolean evaluateBooleanExpression(LispExpression expression) throws LispError {
 		LispItem operatorItem = expression.values().car();
