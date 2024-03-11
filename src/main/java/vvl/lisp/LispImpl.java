@@ -532,85 +532,6 @@ public class LispImpl implements Lisp {
 		}
 		throw new LispError(varName + " is undefined");
 	}
-	
-	/* helpers functions */
-
-	private boolean isBooleanOperator(String operator) {
-		return operator.matches("and|or|not");
-	}
-
-	private boolean isComparisonOperator(String operator) {
-		return operator.matches("<|<=|>|>=|=");
-	}
-
-	private boolean isArithmeticOperator(String operator) {
-		return operator.matches("[+\\-*/]");
-	}
-
-	private LispNumber getNumericValue(LispItem item) throws LispError {
-		if (!(item instanceof LispNumber)) {
-			if (!(item instanceof LispExpression)) {
-				String id = ((LispIdentifier) item).toString();
-				if (globalVar.containsKey(id)) {
-					return getNumericValue(globalVar.get(id));
-				}
-				if (id.matches("[+\\-]+\\d+(\\.\\d+)?([eE]\\-?\\d+)?")) {
-					throw new LispError(id.charAt(0) + " should be a lisp operator");
-				}
-				throw new LispError("Not a number");
-			}
-			return (LispNumber) evaluateArithmeticExpression((LispExpression) item);
-		}
-		return (LispNumber) item;
-	}
-
-	private LispBoolean getBooleanValue(LispItem item) throws LispError {
-		if (!(item instanceof LispBoolean)) {
-			LispItem elt = evaluateExpression((LispExpression) item);
-			if (!(elt instanceof LispBoolean)) {
-				if (elt instanceof LispIdentifier) {
-					String id = ((LispIdentifier) item).toString();
-					if (globalVar.containsKey(id)) {
-						return getBooleanValue(globalVar.get(id));
-					}
-				}
-				throw new LispError("Not a Boolean");
-			}
-			return (LispBoolean) elt;
-		}
-		return (LispBoolean) item;
-	}
-
-	private LispItem getConsExpressionItemValue(LispItem item) throws LispError {
-		if (item instanceof LispExpression) {
-			return evaluateExpression((LispExpression) item);
-		} else if (item instanceof LispIdentifier) {
-			if (((LispIdentifier) item).equals("nil")) {
-				return new LispExpression();
-			}
-			String id = ((LispIdentifier) item).toString();
-			if (globalVar.containsKey(id)) {
-				return getConsExpressionItemValue(globalVar.get(id));
-			}
-		}
-		return item;
-	}
-	
-	private LispExpression processCarExpression(LispExpression expression) throws LispError {
-		String operator = ((LispIdentifier) expression.values().car()).toString();
-		if (operator.equals("cons")) {
-			return evaluateConsExpression(expression);
-		} else if (operator.equals("list")) {
-			return evaluateListExpression(expression);
-		} else {
-			throw new LispError("Not a Cons");
-		}
-	}
-	
-	private boolean isKeyword(String s) {
-		return LISP_KEYWORDS.contains(s);
-	}
-	
 
 	private LispBoolean evaluateBooleanExpression(LispExpression expression) throws LispError {
 		LispItem operatorItem = expression.values().car();
@@ -737,5 +658,83 @@ public class LispImpl implements Lisp {
 			prev = curr;
 		}
 		return LispBoolean.valueOf(true);
+	}
+	
+	/* helpers functions */
+
+	private boolean isBooleanOperator(String operator) {
+		return operator.matches("and|or|not");
+	}
+
+	private boolean isComparisonOperator(String operator) {
+		return operator.matches("<|<=|>|>=|=");
+	}
+
+	private boolean isArithmeticOperator(String operator) {
+		return operator.matches("[+\\-*/]");
+	}
+
+	private LispNumber getNumericValue(LispItem item) throws LispError {
+		if (!(item instanceof LispNumber)) {
+			if (!(item instanceof LispExpression)) {
+				String id = ((LispIdentifier) item).toString();
+				if (globalVar.containsKey(id)) {
+					return getNumericValue(globalVar.get(id));
+				}
+				if (id.matches("[+\\-]+\\d+(\\.\\d+)?([eE]\\-?\\d+)?")) {
+					throw new LispError(id.charAt(0) + " should be a lisp operator");
+				}
+				throw new LispError("Not a number");
+			}
+			return (LispNumber) evaluateArithmeticExpression((LispExpression) item);
+		}
+		return (LispNumber) item;
+	}
+
+	private LispBoolean getBooleanValue(LispItem item) throws LispError {
+		if (!(item instanceof LispBoolean)) {
+			LispItem elt = evaluateExpression((LispExpression) item);
+			if (!(elt instanceof LispBoolean)) {
+				if (elt instanceof LispIdentifier) {
+					String id = ((LispIdentifier) item).toString();
+					if (globalVar.containsKey(id)) {
+						return getBooleanValue(globalVar.get(id));
+					}
+				}
+				throw new LispError("Not a Boolean");
+			}
+			return (LispBoolean) elt;
+		}
+		return (LispBoolean) item;
+	}
+
+	private LispItem getConsExpressionItemValue(LispItem item) throws LispError {
+		if (item instanceof LispExpression) {
+			return evaluateExpression((LispExpression) item);
+		} else if (item instanceof LispIdentifier) {
+			if (((LispIdentifier) item).equals("nil")) {
+				return new LispExpression();
+			}
+			String id = ((LispIdentifier) item).toString();
+			if (globalVar.containsKey(id)) {
+				return getConsExpressionItemValue(globalVar.get(id));
+			}
+		}
+		return item;
+	}
+	
+	private LispExpression processCarExpression(LispExpression expression) throws LispError {
+		String operator = ((LispIdentifier) expression.values().car()).toString();
+		if (operator.equals("cons")) {
+			return evaluateConsExpression(expression);
+		} else if (operator.equals("list")) {
+			return evaluateListExpression(expression);
+		} else {
+			throw new LispError("Not a Cons");
+		}
+	}
+	
+	private boolean isKeyword(String s) {
+		return LISP_KEYWORDS.contains(s);
 	}
 }
