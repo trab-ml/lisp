@@ -14,6 +14,7 @@ import java.util.Set;
 public class LispImpl implements Lisp {
 
 	Map<String, LispItem> globalVar = new HashMap<String,LispItem>();
+	Map<String, LispItem> globalLambdaFct = new HashMap<String,LispItem>();
 	Set<String> LISP_KEYWORDS = new HashSet<String>(Arrays.asList("or", "not", "and", "lambda", "define", "set!", "cons", "#t", "#f", "nil"));
 	
 	@Override
@@ -293,6 +294,11 @@ public class LispImpl implements Lisp {
 					throw new LispError("Invalid number of operands");
 				}
 				evaluatedExpr = evaluateDefineExpression(expression);
+			} else if (operator.equals("set!")) {
+				if (expressionSize != 3) {
+					throw new LispError("Invalid number of operands");
+				}
+				evaluatedExpr = evaluateSetExpression(expression);
 			} else {
 				throw new LispError("Unsupported operator: " + operator);
 			}
@@ -487,21 +493,44 @@ public class LispImpl implements Lisp {
 	private LispItem evaluateDefineExpression(LispExpression expression) throws LispError {
 		Iterator<LispItem> it = expression.values().iterator();
 		it.next();
-		LispItem varId = it.next();
+		LispItem nextItem = it.next();
+		String varName = nextItem.toString();
 		
-		if (!(varId instanceof LispIdentifier)) {
-			throw new LispError(varId.toString() + " is not a valid identifier");
+		if (!(nextItem instanceof LispIdentifier)) {
+			throw new LispError(varName + " is not a valid identifier");
 		}
-		String varName = varId.toString();
-
-//		not allowed: \ + * . ? [^\\+\\*\\.]
 		if(!varName.matches("[a-zA-Z]+\\w*") || isKeyword(varName) || globalVar.containsKey(varName)) {
 			throw new LispError(varName + " is not a valid identifier");
 		}
+		nextItem = it.next();
+		if (nextItem instanceof LispExpression) {
+			nextItem = evaluateExpression((LispExpression) nextItem);
+		}
+		globalVar.put(varName, nextItem);
+		return nextItem;
+	}
+	
+	private LispItem evaluateSetExpression(LispExpression expression) throws LispError {
+		Iterator<LispItem> it = expression.values().iterator();
+		it.next();
+		LispItem nextItem = it.next();
+		String varName = nextItem.toString();
 		
-		LispItem varValue = it.next();
-		globalVar.put(varName, varValue);
-		return varValue;
+		if (!(nextItem instanceof LispIdentifier)) {
+			throw new LispError(varName + " is not a valid identifier");
+		}
+		if(!varName.matches("[a-zA-Z]+\\w*") || isKeyword(varName)) {
+			throw new LispError(varName + " is not a valid identifier");
+		}
+		if (globalVar.containsKey(varName)) {
+			nextItem = it.next();
+			if (nextItem instanceof LispExpression) {
+				nextItem = evaluateExpression((LispExpression) nextItem);
+			}
+			globalVar.put(varName, nextItem);
+			return nextItem;
+		}
+		throw new LispError(varName + " is undefined");
 	}
 	
 	/* helpers functions */
