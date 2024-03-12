@@ -1,4 +1,5 @@
 package vvl.lisp;
+import java.util.Iterator;
 
 import vvl.util.ConsList;
 

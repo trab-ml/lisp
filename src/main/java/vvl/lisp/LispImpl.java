@@ -13,11 +13,12 @@ import java.util.Set;
 
 public class LispImpl implements Lisp {
 
-	Map<String, LispItem> globalVar = new HashMap<String, LispItem>();
-	Map<String, LispExpression> globalLambdaFct = new HashMap<String, LispExpression>();
-	Map<String, Map<String, LispItem>> globalLambdaFctContext = new HashMap<String, Map<String, LispItem>>();
-	Set<String> LISP_KEYWORDS = new HashSet<String>(
+	private Map<String, LispItem> globalVar = new HashMap<String, LispItem>();
+	private Map<String, LispExpression> globalLambdaFct = new HashMap<String, LispExpression>();
+	private Map<String, Map<String, LispItem>> globalLambdaFctContext = new HashMap<String, Map<String, LispItem>>();
+	private Set<String> LISP_KEYWORDS = new HashSet<String>(
 			Arrays.asList("or", "not", "and", "lambda", "define", "set!", "cons", "#t", "#f", "nil"));
+	private String LAMBDA_FUNCTION_TEMPORARY_NAME = "TEMPORARY_MAP_EXPRESSION_LAMBDA_FUNCTION_NAME";
 
 	private boolean isLambdaFunction = false;
 	private String currentLambdaFunctionContext = "";
@@ -231,10 +232,15 @@ public class LispImpl implements Lisp {
 	}
 
 	private LispItem evaluateIdentifier(LispIdentifier identifier) throws LispError {
-		if (identifier.equals("nil")) {
+		String id = identifier.toString();
+		if (id.equals("nil")) {
 			return new LispExpression();
+		} else if (globalVar.containsKey(id)) {
+			return globalVar.get(id);
+		} else if (globalLambdaFct.containsKey(id)) {
+			return globalLambdaFct.get(id);
 		}
-		return identifier;
+		throw new LispError(id + " is undefined");
 	}
 
 	/**
@@ -273,13 +279,22 @@ public class LispImpl implements Lisp {
 				evaluatedExpr = evaluateComparisonExpression(expression);
 			} else if (isArithmeticOperator(operator)) {
 				evaluatedExpr = evaluateArithmeticExpression(expression);
-			} else if (operator.equals("cons") && expressionSize >= 3) {
+			} else if (operator.equals("cons")) {
+				if (expressionSize < 3) {
+					throw new LispError("Invalid number of operands");
+				}
 				evaluatedExpr = evaluateConsExpression(expression);
-			} else if (operator.equals("quote") && expressionSize == 2) {
+			} else if (operator.equals("quote")) {
+				if (expressionSize != 2) {
+					throw new LispError("Invalid number of operands");
+				}
 				evaluatedExpr = evaluateQuoteExpression(expression);
 			} else if (operator.equals("list")) {
 				evaluatedExpr = evaluateListExpression(expression);
-			} else if (operator.equals("if") && expressionSize == 4) {
+			} else if (operator.equals("if")) {
+				if (expressionSize != 4) {
+					throw new LispError("Invalid number of operands");
+				}
 				evaluatedExpr = evaluateIfExpression(expression);
 			} else if (operator.equals("car")) {
 				evaluatedExpr = evaluateCarExpression(expression);
@@ -289,12 +304,20 @@ public class LispImpl implements Lisp {
 				evaluatedExpr = evaluateDefineExpression(expression);
 			} else if (operator.equals("set!") && expressionSize == 3) {
 				evaluatedExpr = evaluateSetExpression(expression);
+			} else if (operator.equals("map") && expressionSize == 3) {
+				isLambdaFunction = true;
+				currentLambdaFunctionContext = LAMBDA_FUNCTION_TEMPORARY_NAME;
+				evaluatedExpr = evaluateMapExpression(expression);
+				isLambdaFunction = false;
+				currentLambdaFunctionContext = "";
 			} else if (globalLambdaFct.containsKey(operator)) {
 				isLambdaFunction = true;
 				currentLambdaFunctionContext = operator;
 				evaluatedExpr = evaluateLambdaExpression(expression);
 				isLambdaFunction = false;
 				currentLambdaFunctionContext = "";
+			} else if (!globalLambdaFct.containsKey(operator)) {
+				throw new LispError(operator + " is undefined");
 			} else {
 				throw new LispError("Invalid number of operands");
 			}
@@ -431,7 +454,7 @@ public class LispImpl implements Lisp {
 		}
 		return result;
 	}
-
+	
 	private LispItem evaluateCarExpression(LispExpression expression) throws LispError {
 		if (expression.values().size() != 2) {
 			throw new LispError("Invalid number of operands");
@@ -504,7 +527,7 @@ public class LispImpl implements Lisp {
 			LispExpression expr = (LispExpression) nextItem;
 			if (isValidLambdaExpression(expr)) {
 				globalLambdaFct.put(varName, expr);
-				return expr;
+				return new LispIdentifier(extractLambdaExpression(expr)); // to exclude parenthesis, can't return String in this fct
 			}
 			nextItem = evaluateExpression(expr);
 		}
@@ -566,7 +589,58 @@ public class LispImpl implements Lisp {
 		
 		return evaluateExpression((LispExpression) lambdaFctBody);
 	}
+	
+	private LispItem evaluateLambdaExpression(LispItem mapParamExprItem, String fctName) throws LispError {
+		LispExpression lambdaExpr = (LispExpression) globalLambdaFct.get(fctName);
+		Iterator<LispItem> lambdaExprIt = lambdaExpr.values().iterator();
+		lambdaExprIt.next();
 
+		LispExpression lambdaParam = (LispExpression) lambdaExprIt.next();
+		int lambdaParamSize = lambdaParam.values().size();
+		
+		LispItem lambdaFctBody = lambdaExprIt.next();
+		if (!(lambdaFctBody instanceof LispExpression)) {
+			return lambdaFctBody;
+		}
+
+		if (lambdaParamSize > 0) {
+			Map<String, LispItem> paramMap = new HashMap<>();
+			Iterator<LispItem> lambdaParamIt = lambdaParam.values().iterator();
+			paramMap.put(lambdaParamIt.next().toString(), mapParamExprItem); // support only one param at the moment!
+			globalLambdaFctContext.put(fctName, paramMap);
+		}
+		
+		return evaluateExpression((LispExpression) lambdaFctBody);
+	}
+
+	private LispItem evaluateMapExpression(LispExpression expression) throws LispError {
+		Iterator<LispItem> it = expression.values().iterator();
+		it.next();
+
+//		LispExpression lambdaExpr = (LispExpression) it.next();
+		globalLambdaFct.put(LAMBDA_FUNCTION_TEMPORARY_NAME, (LispExpression) it.next()); // temporary def a lambda fct, try / catch
+		
+		LispExpression result = new LispExpression();
+		LispExpression mapParamExpr;
+		LispItem tmp = it.next();
+		String varName = tmp.toString();
+		if (tmp instanceof LispIdentifier && globalVar.containsKey(varName)) {
+			mapParamExpr = (LispExpression) globalVar.get(varName);
+		} else if (tmp instanceof LispExpression) {
+			mapParamExpr = (LispExpression) tmp;
+		} else {
+			throw new LispError("A List is expected!");
+		}
+			
+		it = mapParamExpr.values().iterator();
+		while (it.hasNext()) {
+			result.append(evaluateLambdaExpression(it.next(), LAMBDA_FUNCTION_TEMPORARY_NAME)); // to each param, apply lambdafctName
+		}
+		
+		globalLambdaFct.remove(LAMBDA_FUNCTION_TEMPORARY_NAME);
+		return result;
+	}
+	
 	private LispBoolean evaluateBooleanExpression(LispExpression expression) throws LispError {
 		LispItem operatorItem = expression.values().car();
 		String operator = ((LispIdentifier) operatorItem).toString();
@@ -797,19 +871,33 @@ public class LispImpl implements Lisp {
 		return LISP_KEYWORDS.contains(s);
 	}
 
-	// transform into initLambdaExpression??
-	private boolean isValidLambdaExpression(LispExpression expression) throws LispError {
+	private boolean isValidLambdaExpression(LispExpression expression) {
 		int exprSize = expression.values().size();
 		if (exprSize != 3) {
-			throw new LispError("Invalid lambda expression");
+			return false;
 		}
 
 		Iterator<LispItem> it = expression.values().iterator();
 		it.next();
 		LispItem nextItem = it.next();
 		if (!(nextItem instanceof LispExpression)) {
-			throw new LispError("Invalid lambda expression");
+			return false;
 		}
 		return true;
+	}
+	
+	private String extractLambdaExpression(LispExpression expression) {	
+		Iterator<LispItem> it = expression.values().iterator();
+		StringBuilder bd = new StringBuilder();
+		int exprSizeMoinsUn = expression.values().size() - 1;
+		int cpt = 0;
+		while (it.hasNext()) {
+			bd.append(it.next().toString());
+			if (cpt < exprSizeMoinsUn) {				
+				bd.append(" ");
+			}
+			cpt++;
+		}
+		return bd.toString();
 	}
 }
