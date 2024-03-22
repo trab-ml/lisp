@@ -318,10 +318,11 @@ public class LispImpl implements Lisp {
 				evaluatedExpr = evaluateLambdaExpression(expression);
 				isLambdaFunction = false;
 				parentLambdaFunctionContext = "";
-			} else if (!globalLambdaFct.containsKey(operator)) {
-				throw new LispError(operator + " is undefined");
+			} else if (isLambdaFunction && globalLambdaFct.containsKey(parentLambdaFunctionContext)) {
+				evaluatedExpr = evaluateLambdaExpression(expression);
 			} else {
-//				System.out.println("parentLambdaFunctionContext --> " + parentLambdaFunctionContext);
+				// System.out.println("parentLambdaFunctionContext --> " + parentLambdaFunctionContext);
+				// System.out.println("expression --> " + expression);
 				throw new LispError(operator + " is undefined");
 			}
 			return evaluatedExpr;
@@ -584,7 +585,6 @@ public class LispImpl implements Lisp {
 
 			// part1)
 			// Unknown parameter in child context
-
 			// System.out.println("Unknown fctName --> " + fctName);
 
 			// part2)
@@ -634,16 +634,9 @@ public class LispImpl implements Lisp {
 					}
 					paramMap.put(lbdParamTmp.toString(), givenParamTmp);
 				}
-				lbdParamTmp = lambdaParamIt.next();
-				givenParamTmp = givenExprIt.next();
-				if (!lbdParamTmp.equals(givenParamTmp)) {
-					if (givenParamTmp instanceof LispExpression) {
-						givenParamTmp = evaluateExpression((LispExpression) givenParamTmp);
-					}
-					paramMap.put(lbdParamTmp.toString(), givenParamTmp);
-				}
 			}
 			globalLambdaFctContext.put(parentLambdaFunctionContext, paramMap);
+			// System.out.println("paramMap --> " + paramMap);
 		}
 
 		return evaluateExpression((LispExpression) lambdaFctBody);
