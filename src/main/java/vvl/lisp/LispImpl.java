@@ -569,7 +569,6 @@ public class LispImpl implements Lisp {
 		throw new LispError(varName + " is undefined");
 	}
 
-//	NOT USE GLOBAL VAR IN THIS-->
 	private LispItem evaluateLambdaExpression(LispExpression expression) throws LispError {
 		// System.out.println("\n" + globalCpt + ") expression --> " + expression);
 		globalCpt++;
