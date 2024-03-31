@@ -24,6 +24,10 @@ public class LispError extends Exception {
     public LispError(String message, Throwable cause) {
         super(message, cause);
     }
+    
+    public LispError(ErrorMessage message, Throwable cause) {
+        super(message.getMessage(), cause);
+    }
 
     /**
      * Create a new exception with a message.
@@ -33,5 +37,13 @@ public class LispError extends Exception {
      */
     public LispError(String message) {
         super(message);
+    }
+    
+    public LispError(ErrorMessage message) {
+        super(message.getMessage());
+    }
+    
+    public LispError(String errorTrigger, ErrorMessage message) {
+        super(errorTrigger + message.getMessage());
     }
 }
