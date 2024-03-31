@@ -3,8 +3,6 @@ package vvl.lisp;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * A number (either an integer or a real number).

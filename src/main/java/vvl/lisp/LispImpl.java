@@ -180,10 +180,8 @@ public class LispImpl implements Lisp {
 		String operator = ((LispIdentifier) it.next()).toString();
 		LispNumber result = getNumericValue(it.next());
 		int exprLenght = expression.values().size();
-		if (exprLenght == 2) {
-			if (operator.equals("-")) {
-				return result.multiply(new LispNumber(-1));
-			}
+		if (exprLenght == 2 && operator.equals("-")) {
+			return result.multiply(new LispNumber(-1));
 		}
 		if (exprLenght != 3 && (operator.equals("-") || operator.equals("/"))) {
 			throw new LispError(ErrorMessage.INVALID_NUMBER_OF_OPERANDS);
