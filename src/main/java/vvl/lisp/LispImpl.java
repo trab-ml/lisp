@@ -27,15 +27,12 @@ public class LispImpl implements Lisp {
 	public LispItem parse(String expr) throws LispError {
 		LispParser parser = new LispParser(expr);
 		LispItem parsed = parser.parse();
-
 		while (!parser.isInputEmpty()) {
 			parsed = parser.parse();
 		}
-
 		if (parser.getParsedLispItems().size() == 2) {
 			throw new LispError("Unexpected data after parsing complete!");
 		}
-
 		return parsed;
 	}
 
@@ -43,7 +40,6 @@ public class LispImpl implements Lisp {
 	 * Parse a given string and turn it into LispItems.
 	 */
 	private static class LispParser {
-
 		private final String input;
 		private int index = 0;
 		private ArrayList<LispItem> lispItemsList = new ArrayList<LispItem>();
@@ -110,7 +106,6 @@ public class LispImpl implements Lisp {
 				}
 				insideAnExpr(result);
 			}
-
 			return result;
 		}
 
@@ -141,11 +136,9 @@ public class LispImpl implements Lisp {
 			if (expr.matches("\\([<>]\\)") || expr.matches("(<)|(<=)|(>)|(>=)|(=)")) {
 				throw new LispError("Invalid number of operands");
 			}
-
 			if (index == inputLen || input.charAt(index) != ')') {
 				throw new LispError("Misformed Expression");
 			}
-
 			consumeChar(')');
 			return expression;
 		}
@@ -181,7 +174,6 @@ public class LispImpl implements Lisp {
 			int inputLen = input.length();
 
 			Matcher matcher = Pattern.compile("[^\\s()]+").matcher(input.substring(index));
-
 			if (matcher.find()) {
 				identifier.append(matcher.group());
 				index += matcher.group().length();
@@ -191,7 +183,6 @@ public class LispImpl implements Lisp {
 
 			String lispId = identifier.toString();
 			String inputSubstring = input.substring(0, index - 1);
-
 			if (index < inputLen && input.charAt(index) == ')' && !inputSubstring.contains("(")) {
 				throw new LispError("No opening parenthesis!");
 			}
@@ -290,7 +281,6 @@ public class LispImpl implements Lisp {
 						return evaluateExpression(result);
 					}
 				}
-
 				evaluatedExpr = evaluateArithmeticExpression(expression);
 			} else if (operator.equals("cons")) {
 				if (expressionSize < 3) {
@@ -530,7 +520,6 @@ public class LispImpl implements Lisp {
 		it.next();
 		LispItem nextItem = it.next();
 		String varName = nextItem.toString();
-
 		if (!(nextItem instanceof LispIdentifier)) {
 			throw new LispError(varName + " is not a valid identifier");
 		}
@@ -555,7 +544,6 @@ public class LispImpl implements Lisp {
 		it.next();
 		LispItem nextItem = it.next();
 		String varName = nextItem.toString();
-
 		if (!(nextItem instanceof LispIdentifier)) {
 			throw new LispError(varName + " is not a valid identifier");
 		}
@@ -576,7 +564,6 @@ public class LispImpl implements Lisp {
 	private LispItem evaluateLambdaExpression(LispExpression expression) throws LispError {
 		Iterator<LispItem> givenExprIt = expression.values().iterator();
 		String fctName = ((LispIdentifier) givenExprIt.next()).toString();
-
 		if (!globalLambdaFct.containsKey(fctName)) {
 			fctName = globalLambdaFctContext.get(parentLambdaFunctionContext).get(fctName).toString();
 		}
@@ -619,30 +606,6 @@ public class LispImpl implements Lisp {
 			}
 			globalLambdaFctContext.put(parentLambdaFunctionContext, paramMap);
 		}
-
-		return evaluateExpression((LispExpression) lambdaFctBody);
-	}
-
-	private LispItem evaluateLambdaExpression(LispItem mapParamExprItem, String fctName) throws LispError {
-		LispExpression lambdaExpr = (LispExpression) globalLambdaFct.get(fctName);
-		Iterator<LispItem> lambdaExprIt = lambdaExpr.values().iterator();
-		lambdaExprIt.next();
-
-		LispExpression lambdaParam = (LispExpression) lambdaExprIt.next();
-		int lambdaParamSize = lambdaParam.values().size();
-
-		LispItem lambdaFctBody = lambdaExprIt.next();
-		if (!(lambdaFctBody instanceof LispExpression)) {
-			return lambdaFctBody;
-		}
-
-		if (lambdaParamSize > 0) {
-			Map<String, LispItem> paramMap = new HashMap<>();
-			Iterator<LispItem> lambdaParamIt = lambdaParam.values().iterator();
-			paramMap.put(lambdaParamIt.next().toString(), mapParamExprItem); // support only one param at the moment!
-			globalLambdaFctContext.put(fctName, paramMap);
-		}
-
 		return evaluateExpression((LispExpression) lambdaFctBody);
 	}
 
@@ -693,22 +656,20 @@ public class LispImpl implements Lisp {
 
 		// Mapping parameters of remaining items
 		LispExpression lambdaFctBodyClone = lambdaFctBody;
-		Iterator<LispItem> lambdaFctBodyCloneIt = lambdaFctBodyClone.values().iterator(); // (lambda param body)
+		Iterator<LispItem> lambdaFctBodyCloneIt = lambdaFctBodyClone.values().iterator();
 		lambdaFctBodyCloneIt.next();
 		lambdaParamIt = ((LispExpression) lambdaFctBodyCloneIt.next()).values().iterator();
-		lambdaFctBody = (LispExpression) lambdaFctBodyCloneIt.next(); // the lambda body to interprete
+		lambdaFctBody = (LispExpression) lambdaFctBodyCloneIt.next();
 		while (givenExprIt.hasNext()) {
 			if (!lambdaParamIt.hasNext()) { // lambdaFctBodyClone is a lambda expression!
-				// Map parameters of next imbricated expression of lambdaFctBodyClone
-				lambdaFctBodyClone = (LispExpression) lambdaFctBodyCloneIt.next(); // set to the imbricated lambda
-																					// function
+				lambdaFctBodyClone = (LispExpression) lambdaFctBodyCloneIt.next();
 				if (!isValidLambdaExpression(lambdaFctBodyClone)) {
 					throw new LispError("Invalid imbricated lambda expression");
 				}
 				lambdaFctBodyCloneIt = lambdaFctBodyClone.values().iterator();
 				lambdaFctBodyCloneIt.next();
 				lambdaParamIt = ((LispExpression) lambdaFctBodyCloneIt.next()).values().iterator();
-				lambdaFctBody = (LispExpression) lambdaFctBodyCloneIt.next(); // the lambda body to interprete
+				lambdaFctBody = (LispExpression) lambdaFctBodyCloneIt.next();
 			}
 			lbdParamTmp = lambdaParamIt.next();
 			givenParamTmp = givenExprIt.next();
@@ -1005,7 +966,6 @@ public class LispImpl implements Lisp {
 
 	private boolean isValidLambdaExpression(LispExpression expression) throws LispError {
 		int exprSize = expression.values().size();
-
 		Iterator<LispItem> it = expression.values().iterator();
 		LispItem id = it.next();
 		
@@ -1039,7 +999,6 @@ public class LispImpl implements Lisp {
 		return bd.toString();
 	}
 
-	// such as fibonacci
 	private LispItem extractParamsOfExpressionsAtTheSameLevel(LispExpression expression) throws LispError {
 		Iterator<LispItem> exprIt = expression.values().iterator();
 		LispIdentifier id = (LispIdentifier) exprIt.next();
