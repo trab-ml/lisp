@@ -132,11 +132,6 @@ class LispParser {
 		}
 
 		return new LispNumber(new BigInteger(lispNumStr));
-//		try {
-//			return new LispNumber(new BigInteger(lispNumStr));
-//		} catch (NumberFormatException nfe) {
-//			throw new LispError(ErrorMessage.NOT_A_NUMBER, nfe);
-//		}
 	}
 
 	private LispIdentifier parseIdentifier() throws LispError {
@@ -147,11 +142,7 @@ class LispParser {
 		if (matcher.find()) {
 			identifier.append(matcher.group());
 			index += matcher.group().length();
-		} 
-		
-//		else {
-//			throw new LispError("Unable to parse identifier");
-//		}
+		}
 
 		String lispId = identifier.toString();
 		String inputSubstring = input.substring(0, index - 1);

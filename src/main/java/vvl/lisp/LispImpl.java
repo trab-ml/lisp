@@ -1,12 +1,7 @@
 package vvl.lisp;
 
-//import java.math.BigInteger;
-//import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-//import java.util.List;
-//import java.util.regex.Matcher;
-//import java.util.regex.Pattern;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -45,11 +40,6 @@ public class LispImpl implements Lisp {
 			return evaluateIdentifier((LispIdentifier) ex);
 		} 
 		return evaluateExpression((LispExpression) ex);
-
-		//		else if (ex instanceof LispExpression) {
-//		return evaluateExpression((LispExpression) ex);
-//		}
-//		throw new LispError("Unsupported LispItem");
 	}
 
 	private LispItem evaluateIdentifier(LispIdentifier identifier) throws LispError {
@@ -412,10 +402,6 @@ public class LispImpl implements Lisp {
 			return lambdaFctBody;
 		}
 
-//		if (expression.values().size() - 1 != lambdaParamSize) {
-//			throw new LispError(ErrorMessage.INVALID_NUMBER_OF_OPERANDS);
-//		}
-
 		if (lambdaParamSize > 0) {
 			Map<String, LispItem> paramMap;
 			if (globalLambdaFctContext.containsKey(parentLambdaFunctionContext)) {
@@ -451,7 +437,7 @@ public class LispImpl implements Lisp {
 			throw new LispError("Unknown function");
 		}
 
-		LispExpression lambdaExpr = (LispExpression) globalLambdaFct.get(lambdaFctName);
+		LispExpression lambdaExpr = globalLambdaFct.get(lambdaFctName);
 		Iterator<LispItem> lambdaExprIt = lambdaExpr.values().iterator();
 		lambdaExprIt.next();
 
@@ -468,7 +454,8 @@ public class LispImpl implements Lisp {
 		}
 
 		// Mapping parameters of first item
-		LispItem givenParamTmp, lbdParamTmp;
+		LispItem givenParamTmp;
+		LispItem lbdParamTmp;
 		Map<String, LispItem> paramMap = new HashMap<>();
 		Iterator<LispItem> lambdaParamIt;
 		if (lambdaParamSize > 0) {
@@ -835,12 +822,10 @@ public class LispImpl implements Lisp {
 		Iterator<LispItem> exprIt = expression.values().iterator();
 		LispIdentifier id = (LispIdentifier) exprIt.next();
 		LispItem potentialExpr = exprIt.next();
-		if (globalLambdaFct.containsKey(id.toString())) {
-			if (potentialExpr instanceof LispExpression) {
-				LispExpression result = new LispExpression(id);
-				result.append(evaluateExpression(((LispExpression) potentialExpr)));
-				return result;
-			}
+		if (globalLambdaFct.containsKey(id.toString()) && (potentialExpr instanceof LispExpression)) {
+			LispExpression result = new LispExpression(id);
+			result.append(evaluateExpression(((LispExpression) potentialExpr)));
+			return result;
 		}
 		return evaluateExpression(expression);
 	}
